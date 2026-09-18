@@ -53,13 +53,10 @@ export class DashboardServer {
     const publicPath = getPublicPath();
 
     // Route for Dashboard SPA
-    this.app.get('/dashboard', (_req, res) => {
+    this.app.get(/^\/dashboard(\/.*)?$/, (_req, res) => {
       res.sendFile(path.join(publicPath, 'dashboard.html'));
     });
 
-    this.app.get('/dashboard/*', (_req, res) => {
-      res.sendFile(path.join(publicPath, 'dashboard.html'));
-    });
 
     // Fallback for root: landing page
     this.app.get('/', (_req, res) => {
