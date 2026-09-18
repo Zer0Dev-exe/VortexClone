@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cosmic Dashboard — Panel de Control</title>
   <link rel="stylesheet" href="/styles/main.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌀</text></svg>">
+  <link id="favicon" rel="icon" href="https://cdn.discordapp.com/avatars/1550403576990531755/84aec88cbc5b51490ace42bb634c6eb3.webp?size=128">
 </head>
 <body>
 
@@ -17,7 +17,7 @@
     <div class="container nav-content">
       <div style="display: flex; align-items: center; gap: 20px;">
         <a href="/dashboard" class="brand" id="brand-link">
-          <div class="brand-icon">🌀</div>
+          <img class="brand-icon" id="bot-avatar-brand" src="https://cdn.discordapp.com/avatars/1550403576990531755/84aec88cbc5b51490ace42bb634c6eb3.webp?size=128" alt="Cosmic Avatar" style="border-radius: var(--radius-md); object-fit: cover;">
           <span>Cosmic</span>
         </a>
         <div id="breadcrumb-container" style="display: flex; align-items: center; gap: 8px; font-size: 0.95rem; color: var(--text-secondary);">
@@ -25,8 +25,11 @@
         </div>
       </div>
 
-      <div class="user-menu" id="user-menu-container">
-        <!-- Dynamic user profile rendered here -->
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <a href="/docs" class="nav-link" style="font-size: 0.9rem;">📖 Documentación</a>
+        <div class="user-menu" id="user-menu-container">
+          <!-- Dynamic user profile rendered here -->
+        </div>
       </div>
     </div>
   </nav>

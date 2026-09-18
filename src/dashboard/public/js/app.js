@@ -48,7 +48,11 @@ function closeModal(modalId) {
 async function initApp() {
   try {
     // 1. Check Authentication
-    const authData = await API.getMe();
+    const [authData, stats] = await Promise.all([
+      API.getMe(),
+      API.getStats().catch(() => null)
+    ]);
+
     if (!authData.isAuthenticated || !authData.user) {
       window.location.href = '/auth/login';
       return;
@@ -56,6 +60,14 @@ async function initApp() {
 
     state.currentUser = authData.user;
     renderUserNav(authData.user);
+
+    // Update brand avatar with real bot avatar
+    if (stats && stats.avatar) {
+      const brandAvatar = document.getElementById('bot-avatar-brand');
+      const favicon = document.getElementById('favicon');
+      if (brandAvatar) brandAvatar.src = stats.avatar;
+      if (favicon) favicon.href = stats.avatar;
+    }
 
     // 2. Setup Global Listeners
     setupGlobalListeners();
@@ -88,11 +100,11 @@ function renderUserNav(user) {
     <div class="user-badge">
       <img class="user-avatar" src="${avatarUrl}" alt="Avatar">
       <span class="user-name">${user.globalName || user.username}</span>
-      ${user.isDemo ? '<span style="font-size: 0.75rem; background: #f59e0b; color: #000; padding: 2px 6px; border-radius: 4px; font-weight: bold;">DEMO</span>' : ''}
       <a href="/auth/logout" class="btn btn-secondary btn-sm" style="margin-left: 8px;">Salir</a>
     </div>
   `;
 }
+
 
 // Global Event Listeners
 function setupGlobalListeners() {

@@ -6,7 +6,7 @@
   <title>Cosmic Bot — Panel de Control & Moderación Avanzada</title>
   <meta name="description" content="Dashboard web para Cosmic (Vortex Clone) en TypeScript, Sapphire Framework y MongoDB Atlas. Gestiona la seguridad de tu servidor de Discord en tiempo real.">
   <link rel="stylesheet" href="/styles/main.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌀</text></svg>">
+  <link id="favicon" rel="icon" href="https://cdn.discordapp.com/avatars/1550403576990531755/84aec88cbc5b51490ace42bb634c6eb3.webp?size=128">
 </head>
 <body>
 
@@ -14,14 +14,14 @@
   <nav class="navbar">
     <div class="container nav-content">
       <a href="/" class="brand">
-        <div class="brand-icon">🌀</div>
+        <img class="brand-icon" id="bot-avatar-brand" src="https://cdn.discordapp.com/avatars/1550403576990531755/84aec88cbc5b51490ace42bb634c6eb3.webp?size=128" alt="Cosmic Avatar" style="border-radius: var(--radius-md); object-fit: cover;">
         <span>Cosmic</span>
       </a>
 
       <div class="nav-links">
         <a href="#features" class="nav-link">Características</a>
+        <a href="/docs" class="nav-link">Documentación</a>
         <a href="#stats" class="nav-link">Estado</a>
-        <a href="https://github.com/Zer0Dev-exe/VortexClone" target="_blank" class="nav-link">GitHub</a>
         <div id="auth-nav-container">
           <a href="/auth/login" class="btn btn-discord btn-sm">
             <span>Iniciar Sesión con Discord</span>
@@ -35,7 +35,7 @@
   <section class="hero-section">
     <div class="container">
       <div class="hero-pill">
-        <span>⚡</span> Sapphire Framework v5 + MongoDB Atlas Cloud
+        <span>🛡️</span> Moderación Profesional, AutoMod & Auditoría en la Nube
       </div>
 
       <h1 class="hero-title">
@@ -43,18 +43,18 @@
       </h1>
 
       <p class="hero-subtitle">
-        Potente recreación de <strong>Vortex</strong> optimizada para Discord.js v14. AutoMod inteligente, escalado automático de sanciones, auditoría 360° y panel de configuración web en la nube sin latencia.
+        Recreación moderna de <strong>Vortex</strong> optimizada para Discord.js v14. AutoMod proactivo, escalado automático de sanciones por strikes, auditoría 360° y panel de configuración web sin latencia.
       </p>
 
       <div class="hero-actions">
-        <a href="/dashboard" class="btn btn-primary" id="btn-enter-dashboard">
-          <span>🚀 Entrar al Dashboard</span>
+        <a href="/auth/login" class="btn btn-discord">
+          <span>🚀 Iniciar Sesión con Discord</span>
+        </a>
+        <a href="/docs" class="btn btn-secondary">
+          <span>📖 Ver Documentación</span>
         </a>
         <a href="https://discord.com/oauth2/authorize?client_id=1550403576990531755&permissions=1099511627775&scope=bot%20applications.commands" target="_blank" class="btn btn-secondary">
           <span>➕ Invitar a Cosmic</span>
-        </a>
-        <a href="/auth/login?demo=true" class="btn btn-secondary" style="border-style: dashed;" title="Prueba el panel de control instantáneamente sin configurar OAuth2">
-          <span>🧪 Modo Demo</span>
         </a>
       </div>
     </div>
@@ -90,7 +90,7 @@
       <div class="stat-card">
         <div class="stat-icon emerald">☁️</div>
         <div>
-          <div class="stat-value" id="stat-db">Atlas M0</div>
+          <div class="stat-value" id="stat-db">MongoDB Atlas</div>
           <div class="stat-label">Base de Datos Cloud</div>
         </div>
       </div>
@@ -165,9 +165,13 @@
         // Update nav
         const authContainer = document.getElementById('auth-nav-container');
         if (me.isAuthenticated && me.user) {
+          const userAvatar = me.user.avatar
+            ? `https://cdn.discordapp.com/avatars/${me.user.id}/${me.user.avatar}.png`
+            : 'https://cdn.discordapp.com/embed/avatars/0.png';
+
           authContainer.innerHTML = `
             <div class="user-badge">
-              <img class="user-avatar" src="${me.user.avatar ? `https://cdn.discordapp.com/avatars/${me.user.id}/${me.user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="Avatar">
+              <img class="user-avatar" src="${userAvatar}" alt="Avatar">
               <span class="user-name">${me.user.globalName || me.user.username}</span>
               <a href="/dashboard" class="btn btn-primary btn-sm" style="margin-left: 8px;">Panel</a>
               <a href="/auth/logout" class="btn btn-secondary btn-sm">Salir</a>
@@ -175,13 +179,20 @@
           `;
         }
 
-        // Update stats
+        // Update stats & bot avatar
         if (stats) {
           document.getElementById('stat-servers').textContent = stats.guildsCount || 0;
           document.getElementById('stat-users').textContent = (stats.usersCount || 0).toLocaleString();
           document.getElementById('stat-ping').textContent = `${Math.max(0, stats.ping)} ms`;
           document.getElementById('stat-db').textContent = stats.dbConnected ? 'Atlas Conectado' : 'Modo Memoria';
           document.getElementById('stat-db').style.color = stats.dbConnected ? '#10b981' : '#f59e0b';
+
+          if (stats.avatar) {
+            const brandAvatar = document.getElementById('bot-avatar-brand');
+            const favicon = document.getElementById('favicon');
+            if (brandAvatar) brandAvatar.src = stats.avatar;
+            if (favicon) favicon.href = stats.avatar;
+          }
         }
       } catch (err) {
         console.warn('Error loading stats:', err);

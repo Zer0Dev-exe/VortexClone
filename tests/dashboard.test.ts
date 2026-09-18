@@ -18,8 +18,7 @@ describe('Cosmic Dashboard Backend', () => {
       id: '999888777666',
       username: 'TestAdmin',
       globalName: 'Test Administrator',
-      avatar: 'abc123avatarhash',
-      isDemo: false
+      avatar: 'abc123avatarhash'
     };
 
     const token = jwt.sign(mockUser, config.sessionSecret, { expiresIn: '1h' });
@@ -30,6 +29,6 @@ describe('Cosmic Dashboard Backend', () => {
     expect(decoded.username).toBe(mockUser.username);
     expect(decoded.globalName).toBe(mockUser.globalName);
     expect(decoded.avatar).toBe(mockUser.avatar);
-    expect(decoded.isDemo).toBe(false);
   });
+
 });
