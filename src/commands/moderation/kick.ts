@@ -1,76 +1,84 @@
-import {
-  ChatInputCommandInteraction,
-  Message,
-  PermissionFlagsBits,
-  SlashCommandBuilder
-} from 'discord.js';
-import { Command, Action } from '../../types/index.js';
-import { Database } from '../../database/Database.js';
-import { ModLogger } from '../../logging/ModLogger.js';
+import { Command, Args } from '@sapphire/framework';
+import { PermissionFlagsBits, Message } from 'discord.js';
+import { Action } from '../../types/index.js';
 
-export function createKickCommand(db: Database, modLogger: ModLogger): Command {
-  const slashData = new SlashCommandBuilder()
-    .setName('kick')
-    .setDescription('Expulsa a un miembro del servidor.')
-    .addUserOption(opt => opt.setName('usuario').setDescription('Usuario a expulsar').setRequired(true))
-    .addStringOption(opt => opt.setName('motivo').setDescription('Motivo de la expulsión').setRequired(false))
-    .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers);
+export class KickCommand extends Command {
+  public constructor(context: Command.LoaderContext, options: Command.Options) {
+    super(context, {
+      ...options,
+      name: 'kick',
+      description: 'Expulsa a un miembro del servidor.',
+      requiredUserPermissions: [PermissionFlagsBits.KickMembers],
+      requiredClientPermissions: [PermissionFlagsBits.KickMembers],
+      fullCategory: ['moderation']
+    });
+  }
 
-  return {
-    name: 'kick',
-    description: 'Expulsa a un miembro del servidor.',
-    category: 'moderation',
-    userPermissions: [PermissionFlagsBits.KickMembers],
-    botPermissions: [PermissionFlagsBits.KickMembers],
-    slashData,
+  public override registerApplicationCommands(registry: Command.Registry) {
+    registry.registerChatInputCommand(builder =>
+      builder
+        .setName(this.name)
+        .setDescription(this.description)
+        .addUserOption(opt => opt.setName('usuario').setDescription('Usuario a expulsar').setRequired(true))
+        .addStringOption(opt => opt.setName('motivo').setDescription('Motivo de la expulsión').setRequired(false))
+        .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers)
+    );
+  }
 
-    executeSlash: async (interaction: ChatInputCommandInteraction) => {
-      const targetUser = interaction.options.getUser('usuario', true);
-      const reason = interaction.options.getString('motivo') || 'Sin motivo especificado';
-      const guild = interaction.guild!;
+  public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
+    const targetUser = interaction.options.getUser('usuario', true);
+    const reason = interaction.options.getString('motivo') || 'Sin motivo especificado';
+    const guild = interaction.guild!;
 
-      try {
-        const member = await guild.members.fetch(targetUser.id);
-        if (!member.kickable) {
-          await interaction.reply({ content: '❌ No puedo expulsar a este usuario (su rol es superior o igual al mío).', ephemeral: true });
-          return;
-        }
-
-        await targetUser.send(`👢 Has sido expulsado de **${guild.name}**. Motivo: ${reason}`).catch(() => {});
-        await member.kick(reason);
-
-        await modLogger.postCase(guild.id, targetUser, interaction.user, Action.KICK, reason);
-        await interaction.reply({ content: `👢 **${targetUser.tag}** ha sido expulsado.` });
-      } catch (err: any) {
-        await interaction.reply({ content: `❌ Error al expulsar: ${err.message}`, ephemeral: true });
-      }
-    },
-
-    executePrefix: async (message: Message, args: string[]) => {
-      if (!args[0]) {
-        await message.reply('Uso: `>>kick <@usuario|id> [motivo]`');
+    try {
+      const member = await guild.members.fetch(targetUser.id).catch(() => null);
+      if (!member) {
+        await interaction.reply({ content: '❌ El usuario no está en el servidor.', ephemeral: true });
         return;
       }
-      const mention = message.mentions.users.first();
-      const userId = mention ? mention.id : args[0].replace(/[<@!>]/g, '');
-      const reason = args.slice(1).join(' ') || 'Sin motivo especificado';
-      const guild = message.guild!;
-
-      try {
-        const member = await guild.members.fetch(userId);
-        if (!member.kickable) {
-          await message.reply('❌ No puedo expulsar a este miembro.');
-          return;
-        }
-
-        await member.user.send(`👢 Has sido expulsado de **${guild.name}**. Motivo: ${reason}`).catch(() => {});
-        await member.kick(reason);
-
-        await modLogger.postCase(guild.id, member.user, message.author, Action.KICK, reason);
-        await message.reply(`👢 **${member.user.tag}** ha sido expulsado.`);
-      } catch (err: any) {
-        await message.reply(`❌ Error: ${err.message}`);
+      if (!member.kickable) {
+        await interaction.reply({ content: '❌ No puedo expulsar a este usuario (su rol es superior o igual al mío).', ephemeral: true });
+        return;
       }
+
+      await targetUser.send(`👢 Has sido expulsado de **${guild.name}**. Motivo: ${reason}`).catch(() => {});
+      await member.kick(reason);
+
+      await this.container.modLogger.postCase(guild.id, targetUser, interaction.user, Action.KICK, reason);
+      await interaction.reply({ content: `👢 **${targetUser.tag}** ha sido expulsado.` });
+    } catch (err: any) {
+      await interaction.reply({ content: `❌ Error al expulsar: ${err.message}`, ephemeral: true });
     }
-  };
+  }
+
+  public override async messageRun(message: Message, args: Args) {
+    const member = await args.pick('member').catch(async () => {
+      const raw = await args.pick('string').catch(() => null);
+      if (!raw) return null;
+      return message.guild?.members.fetch(raw.replace(/[<@!>]/g, '')).catch(() => null);
+    });
+
+    if (!member) {
+      await message.reply('Uso: `>>kick <@usuario|id> [motivo]`');
+      return;
+    }
+
+    const reason = (await args.rest('string').catch(() => '')) || 'Sin motivo especificado';
+    const guild = message.guild!;
+
+    try {
+      if (!member.kickable) {
+        await message.reply('❌ No puedo expulsar a este miembro (su rol es superior o igual al mío).');
+        return;
+      }
+
+      await member.user.send(`👢 Has sido expulsado de **${guild.name}**. Motivo: ${reason}`).catch(() => {});
+      await member.kick(reason);
+
+      await this.container.modLogger.postCase(guild.id, member.user, message.author, Action.KICK, reason);
+      await message.reply(`👢 **${member.user.tag}** ha sido expulsado.`);
+    } catch (err: any) {
+      await message.reply(`❌ Error: ${err.message}`);
+    }
+  }
 }

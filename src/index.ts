@@ -1,8 +1,5 @@
-import {
-  Client,
-  GatewayIntentBits,
-  Partials
-} from 'discord.js';
+import { SapphireClient, container } from '@sapphire/framework';
+import { GatewayIntentBits, Partials, Message } from 'discord.js';
 import { config } from './config.js';
 import { Database } from './database/Database.js';
 import { ModLogger } from './logging/ModLogger.js';
@@ -11,12 +8,10 @@ import { MessageCache } from './logging/MessageCache.js';
 import { AutoMod } from './automod/AutoMod.js';
 import { AntiRaid } from './automod/AntiRaid.js';
 import { PunishmentScheduler } from './scheduler/PunishmentScheduler.js';
-import { registerAllCommands } from './commands/CommandRegistry.js';
-import { setupEventListeners } from './events/index.js';
 
 async function main() {
   console.log('========================================================');
-  console.log('🌀 Vortex Clone (TypeScript & Discord.js v14)');
+  console.log('🌀 Vortex Clone (Sapphire Framework & Discord.js v14)');
   console.log('   Inspirado en jagrosh/Vortex - Con MongoDB Atlas Cloud');
   console.log('========================================================\n');
 
@@ -38,8 +33,8 @@ async function main() {
     }
   }
 
-  // 2. Initialize Discord Client with required Intents and Partials
-  const client = new Client({
+  // 2. Initialize Sapphire Client
+  const client = new SapphireClient({
     intents: [
       GatewayIntentBits.Guilds,
       GatewayIntentBits.GuildMembers,
@@ -53,7 +48,18 @@ async function main() {
       Partials.Channel,
       Partials.GuildMember,
       Partials.User
-    ]
+    ],
+    defaultPrefix: config.defaultPrefix,
+    loadMessageCommandListeners: true,
+    fetchPrefix: async (message: Message) => {
+      if (!message.guild) return config.defaultPrefix;
+      try {
+        const settings = await db.getGuildSettings(message.guild.id);
+        return settings.prefix || config.defaultPrefix;
+      } catch {
+        return config.defaultPrefix;
+      }
+    }
   });
 
   // 3. Initialize Core Subsystems
@@ -62,28 +68,21 @@ async function main() {
   const guildLogger = new GuildLogger(client, db);
   const autoMod = new AutoMod(client, db, modLogger);
   const antiRaid = new AntiRaid(db, modLogger);
-
-  // 4. Register Commands
-  const commands = registerAllCommands(client, db, modLogger, autoMod.getStrikeHandler());
-  console.log(`📋 ${commands.size} comandos cargados (Moderación, AutoMod, Configuración, General).`);
-
-  // 5. Setup Gateway Event Listeners
-  setupEventListeners(
-    client,
-    db,
-    commands,
-    autoMod,
-    antiRaid,
-    modLogger,
-    guildLogger,
-    messageCache
-  );
-
-  // 6. Start Temp Punishments Scheduler
   const scheduler = new PunishmentScheduler(client, db, modLogger, 15000);
+
+  // 4. Inject into Sapphire container
+  container.db = db;
+  container.autoMod = autoMod;
+  container.antiRaid = antiRaid;
+  container.modLogger = modLogger;
+  container.guildLogger = guildLogger;
+  container.messageCache = messageCache;
+  container.scheduler = scheduler;
+
+  // 5. Start Temp Punishments Scheduler
   scheduler.start();
 
-  // 7. Graceful Shutdown
+  // 6. Graceful Shutdown
   const shutdown = async () => {
     console.log('\n🛑 Apagando Vortex Clone...');
     scheduler.stop();
@@ -94,11 +93,9 @@ async function main() {
   process.on('SIGINT', shutdown);
   process.on('SIGTERM', shutdown);
 
-  // 8. Connect to Discord Gateway
+  // 7. Connect to Discord Gateway
   if (!config.token || config.token === 'your_bot_token_here') {
     console.warn('\n⚠️ [AVISO]: No se ha configurado un DISCORD_TOKEN válido en el archivo .env.');
-    console.warn('   Crea tu archivo .env basándote en .env.example y añade el Token de tu bot.');
-    console.warn('   La arquitectura, esquemas de MongoDB Atlas y suite de comandos están listos.\n');
     return;
   }
 

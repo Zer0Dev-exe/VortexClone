@@ -1,55 +1,68 @@
-import {
-  ChatInputCommandInteraction,
-  EmbedBuilder,
-  Message,
-  SlashCommandBuilder
-} from 'discord.js';
-import { Command } from '../../types/index.js';
+import { Command, Args } from '@sapphire/framework';
+import { EmbedBuilder, Message } from 'discord.js';
 
-export function createAboutCommand(): Command {
-  const slashData = new SlashCommandBuilder()
-    .setName('about')
-    .setDescription('Información sobre el bot Vortex Clone.');
+export class AboutCommand extends Command {
+  public constructor(context: Command.LoaderContext, options: Command.Options) {
+    super(context, {
+      ...options,
+      name: 'about',
+      description: 'Información sobre el bot Vortex Clone.',
+      fullCategory: ['general']
+    });
+  }
 
-  return {
-    name: 'about',
-    description: 'Información sobre el bot.',
-    category: 'general',
-    slashData,
+  public override registerApplicationCommands(registry: Command.Registry) {
+    registry.registerChatInputCommand(builder =>
+      builder
+        .setName(this.name)
+        .setDescription(this.description)
+    );
+  }
 
-    executeSlash: async (interaction: ChatInputCommandInteraction) => {
-      const client = interaction.client;
-      const uptime = Math.floor(process.uptime());
-      const hours = Math.floor(uptime / 3600);
-      const minutes = Math.floor((uptime % 3600) / 60);
+  public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
+    const client = interaction.client;
+    const uptime = Math.floor(process.uptime());
+    const hours = Math.floor(uptime / 3600);
+    const minutes = Math.floor((uptime % 3600) / 60);
 
-      const embed = new EmbedBuilder()
-        .setTitle('🌀 Vortex (Clon en TypeScript & Discord.js)')
-        .setColor(0x3498db)
-        .setDescription(
-          'Bot de moderación y seguridad integral inspirado en **jagrosh/Vortex**, reimplementado en TypeScript y Discord.js v14 sin dependencias de Java ni sobrecarga de sharding.'
-        )
-        .addFields(
-          { name: '🌐 Servidores', value: `${client.guilds.cache.size}`, inline: true },
-          { name: '👥 Usuarios en caché', value: `${client.users.cache.size}`, inline: true },
-          { name: '⏱️ Tiempo activo', value: `${hours}h ${minutes}m`, inline: true },
-          { name: '⚙️ Runtime', value: `Node.js ${process.version}`, inline: true },
-          { name: '📦 Librería', value: 'Discord.js v14', inline: true },
-          { name: '💾 Base de Datos', value: 'SQLite (better-sqlite3)', inline: true }
-        )
-        .setFooter({ text: 'Inspirado en el trabajo original de John Grosh (jagrosh)' });
+    const embed = new EmbedBuilder()
+      .setTitle('🌀 Vortex (Sapphire & Discord.js v14)')
+      .setColor(0x3498db)
+      .setDescription(
+        'Bot de moderación y seguridad integral inspirado en **jagrosh/Vortex**, reimplementado con arquitectura moderna en **Sapphire Framework**, TypeScript y Discord.js v14.'
+      )
+      .addFields(
+        { name: '🌐 Servidores', value: `${client.guilds.cache.size}`, inline: true },
+        { name: '👥 Usuarios en caché', value: `${client.users.cache.size}`, inline: true },
+        { name: '⏱️ Tiempo activo', value: `${hours}h ${minutes}m`, inline: true },
+        { name: '⚙️ Runtime', value: `Node.js ${process.version}`, inline: true },
+        { name: '💎 Framework', value: 'Sapphire Framework v5', inline: true },
+        { name: '🍃 Base de Datos', value: 'MongoDB Atlas Cloud', inline: true }
+      )
+      .setFooter({ text: 'Inspirado en el trabajo original de John Grosh (jagrosh)' });
 
-      await interaction.reply({ embeds: [embed] });
-    },
+    await interaction.reply({ embeds: [embed] });
+  }
 
-    executePrefix: async (message: Message, args: string[]) => {
-      const client = message.client;
-      const embed = new EmbedBuilder()
-        .setTitle('🌀 Vortex')
-        .setColor(0x3498db)
-        .setDescription('Bot de moderación avanzado. Escribe `/help` o `>>help` para ver comandos.');
+  public override async messageRun(message: Message, _args: Args) {
+    const client = message.client;
+    const uptime = Math.floor(process.uptime());
+    const hours = Math.floor(uptime / 3600);
+    const minutes = Math.floor((uptime % 3600) / 60);
 
-      await message.reply({ embeds: [embed] });
-    }
-  };
+    const embed = new EmbedBuilder()
+      .setTitle('🌀 Vortex (Sapphire Framework)')
+      .setColor(0x3498db)
+      .setDescription(
+        'Bot de moderación y seguridad integral inspirado en **jagrosh/Vortex**, reimplementado en **TypeScript & Sapphire Framework**.'
+      )
+      .addFields(
+        { name: '🌐 Servidores', value: `${client.guilds.cache.size}`, inline: true },
+        { name: '⏱️ Tiempo activo', value: `${hours}h ${minutes}m`, inline: true },
+        { name: '🍃 Base de Datos', value: 'MongoDB Atlas', inline: true }
+      )
+      .setFooter({ text: 'Escribe /help o >>help para ver la lista de comandos.' });
+
+    await message.reply({ embeds: [embed] });
+  }
 }

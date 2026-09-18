@@ -6,6 +6,25 @@ import {
   SlashCommandSubcommandsOnlyBuilder,
   SlashCommandOptionsOnlyBuilder
 } from 'discord.js';
+import type { Database } from '../database/Database.js';
+import type { AutoMod } from '../automod/AutoMod.js';
+import type { AntiRaid } from '../automod/AntiRaid.js';
+import type { ModLogger } from '../logging/ModLogger.js';
+import type { GuildLogger } from '../logging/GuildLogger.js';
+import type { MessageCache } from '../logging/MessageCache.js';
+import type { PunishmentScheduler } from '../scheduler/PunishmentScheduler.js';
+
+declare module '@sapphire/pieces' {
+  interface Container {
+    db: Database;
+    autoMod: AutoMod;
+    antiRaid: AntiRaid;
+    modLogger: ModLogger;
+    guildLogger: GuildLogger;
+    messageCache: MessageCache;
+    scheduler: PunishmentScheduler;
+  }
+}
 
 export enum Action {
   NONE = 'NONE',

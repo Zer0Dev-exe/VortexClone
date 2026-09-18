@@ -1,75 +1,78 @@
-import {
-  ChatInputCommandInteraction,
-  EmbedBuilder,
-  Message,
-  SlashCommandBuilder
-} from 'discord.js';
-import { Command } from '../../types/index.js';
+import { Command, Args } from '@sapphire/framework';
+import { EmbedBuilder, Message } from 'discord.js';
 
-export function createHelpCommand(commands: Map<string, Command>): Command {
-  const slashData = new SlashCommandBuilder()
-    .setName('help')
-    .setDescription('Muestra la lista de comandos disponibles en Vortex.');
+export class HelpCommand extends Command {
+  public constructor(context: Command.LoaderContext, options: Command.Options) {
+    super(context, {
+      ...options,
+      name: 'help',
+      description: 'Muestra la lista de comandos disponibles en Vortex.',
+      fullCategory: ['general']
+    });
+  }
 
-  return {
-    name: 'help',
-    description: 'Muestra la lista de comandos.',
-    category: 'general',
-    slashData,
+  public override registerApplicationCommands(registry: Command.Registry) {
+    registry.registerChatInputCommand(builder =>
+      builder
+        .setName(this.name)
+        .setDescription(this.description)
+    );
+  }
 
-    executeSlash: async (interaction: ChatInputCommandInteraction) => {
-      const categories: Record<string, string[]> = {
-        moderation: [],
-        automod: [],
-        settings: [],
-        general: []
-      };
+  public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
+    const categories: Record<string, string[]> = {
+      moderation: [],
+      automod: [],
+      settings: [],
+      general: []
+    };
 
-      for (const cmd of commands.values()) {
-        if (categories[cmd.category]) {
-          categories[cmd.category].push(`\`/${cmd.name}\` - ${cmd.description}`);
-        }
+    for (const cmd of this.store.values()) {
+      const cat = cmd.fullCategory[0]?.toLowerCase() || 'general';
+      if (categories[cat]) {
+        categories[cat].push(`\`/${cmd.name}\` - ${cmd.description}`);
       }
-
-      const embed = new EmbedBuilder()
-        .setTitle('🌀 Guía de Comandos de Vortex')
-        .setColor(0x3498db)
-        .addFields(
-          { name: '🛡️ Moderación', value: categories.moderation.join('\n') || 'Ninguno' },
-          { name: '🤖 AutoMod', value: categories.automod.join('\n') || 'Ninguno' },
-          { name: '⚙️ Configuración', value: categories.settings.join('\n') || 'Ninguno' },
-          { name: 'ℹ️ General', value: categories.general.join('\n') || 'Ninguno' }
-        )
-        .setFooter({ text: 'También puedes usar los comandos con el prefijo textual (por defecto >>).' });
-
-      await interaction.reply({ embeds: [embed] });
-    },
-
-    executePrefix: async (message: Message, args: string[]) => {
-      const categories: Record<string, string[]> = {
-        moderation: [],
-        automod: [],
-        settings: [],
-        general: []
-      };
-
-      for (const cmd of commands.values()) {
-        if (categories[cmd.category]) {
-          categories[cmd.category].push(`\`>>${cmd.name}\` - ${cmd.description}`);
-        }
-      }
-
-      const embed = new EmbedBuilder()
-        .setTitle('🌀 Comandos de Vortex')
-        .setColor(0x3498db)
-        .addFields(
-          { name: '🛡️ Moderación', value: categories.moderation.join('\n') },
-          { name: '🤖 AutoMod', value: categories.automod.join('\n') },
-          { name: '⚙️ Configuración', value: categories.settings.join('\n') },
-          { name: 'ℹ️ General', value: categories.general.join('\n') }
-        );
-
-      await message.reply({ embeds: [embed] });
     }
-  };
+
+    const embed = new EmbedBuilder()
+      .setTitle('🌀 Guía de Comandos de Vortex (Sapphire)')
+      .setColor(0x3498db)
+      .addFields(
+        { name: '🛡️ Moderación', value: categories.moderation.join('\n') || 'Ninguno' },
+        { name: '🤖 AutoMod', value: categories.automod.join('\n') || 'Ninguno' },
+        { name: '⚙️ Configuración', value: categories.settings.join('\n') || 'Ninguno' },
+        { name: 'ℹ️ General', value: categories.general.join('\n') || 'Ninguno' }
+      )
+      .setFooter({ text: 'También puedes usar los comandos con el prefijo textual (por defecto >>).' });
+
+    await interaction.reply({ embeds: [embed] });
+  }
+
+  public override async messageRun(message: Message, _args: Args) {
+    const categories: Record<string, string[]> = {
+      moderation: [],
+      automod: [],
+      settings: [],
+      general: []
+    };
+
+    for (const cmd of this.store.values()) {
+      const cat = cmd.fullCategory[0]?.toLowerCase() || 'general';
+      if (categories[cat]) {
+        categories[cat].push(`\`>>${cmd.name}\` - ${cmd.description}`);
+      }
+    }
+
+    const embed = new EmbedBuilder()
+      .setTitle('🌀 Comandos de Vortex (Sapphire)')
+      .setColor(0x3498db)
+      .addFields(
+        { name: '🛡️ Moderación', value: categories.moderation.join('\n') || 'Ninguno' },
+        { name: '🤖 AutoMod', value: categories.automod.join('\n') || 'Ninguno' },
+        { name: '⚙️ Configuración', value: categories.settings.join('\n') || 'Ninguno' },
+        { name: 'ℹ️ General', value: categories.general.join('\n') || 'Ninguno' }
+      );
+
+    await message.reply({ embeds: [embed] });
+  }
 }
