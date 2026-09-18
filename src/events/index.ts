@@ -25,6 +25,11 @@ export function setupEventListeners(
   guildLogger: GuildLogger,
   msgCache: MessageCache
 ): void {
+  // --- Client Error Handling ---
+  client.on('error', error => {
+    console.error('[DiscordClient] Error no capturado en el cliente:', error);
+  });
+
   // --- Client Ready ---
   client.once(Events.ClientReady, c => {
     console.log(`✅ [Vortex] Conectado como ${c.user.tag}!`);
@@ -65,109 +70,137 @@ export function setupEventListeners(
 
   // --- Message Create ---
   client.on(Events.MessageCreate, async (message: Message) => {
-    if (!message.guild || message.author.bot) return;
+    try {
+      if (!message.guild || message.author.bot) return;
 
-    // Cache message for audit logs
-    msgCache.put(message);
+      // Cache message for audit logs
+      msgCache.put(message);
 
-    // 1. AutoMod inspection
-    const automodTriggered = await autoMod.performAutomod(message);
-    if (automodTriggered) return; // Stop if message was filtered or punished
+      // 1. AutoMod inspection
+      const automodTriggered = await autoMod.performAutomod(message);
+      if (automodTriggered) return; // Stop if message was filtered or punished
 
-    // 2. Prefix Command processing
-    const guildSettings = await db.getGuildSettings(message.guild.id);
-    const prefix = guildSettings.prefix || '>>';
+      // 2. Prefix Command processing
+      const guildSettings = await db.getGuildSettings(message.guild.id);
+      const prefix = guildSettings.prefix || '>>';
 
-    if (!message.content.startsWith(prefix)) return;
+      if (!message.content.startsWith(prefix)) return;
 
-    const args = message.content.slice(prefix.length).trim().split(/\s+/);
-    const commandName = args.shift()?.toLowerCase();
-    if (!commandName) return;
+      const args = message.content.slice(prefix.length).trim().split(/\s+/);
+      const commandName = args.shift()?.toLowerCase();
+      if (!commandName) return;
 
-    const command = commands.get(commandName);
-    if (!command || !command.executePrefix) return;
+      const command = commands.get(commandName);
+      if (!command || !command.executePrefix) return;
 
-    // Permission check
-    if (command.userPermissions && message.member) {
-      for (const perm of command.userPermissions) {
-        if (!message.member.permissions.has(perm)) {
-          await message.reply('❌ No tienes los permisos requeridos para usar este comando.');
-          return;
+      // Permission check
+      if (command.userPermissions && message.member) {
+        for (const perm of command.userPermissions) {
+          if (!message.member.permissions.has(perm)) {
+            await message.reply('❌ No tienes los permisos requeridos para usar este comando.');
+            return;
+          }
         }
       }
-    }
 
-    try {
       await command.executePrefix(message, args);
     } catch (err: any) {
-      console.error(`[PrefixError] Error ejecutando ${prefix}${commandName}:`, err);
-      await message.reply(`❌ Ocurrió un error al ejecutar el comando: ${err.message}`);
+      console.error(`[MessageCreate Error]:`, err);
+      try {
+        await message.reply(`❌ Ocurrió un error al procesar el mensaje o comando: ${err.message}`);
+      } catch {
+        // Ignore reply failure if bot cannot send messages
+      }
     }
   });
 
   // --- Message Update (Edit audit and automod) ---
   client.on(Events.MessageUpdate, async (oldMsg, newMsg) => {
-    if (!newMsg.guild) return;
+    try {
+      if (!newMsg.guild) return;
 
-    const fullNewMsg = newMsg.partial ? await newMsg.fetch().catch(() => null) : newMsg;
-    if (!fullNewMsg || fullNewMsg.author?.bot) return;
+      const fullNewMsg = newMsg.partial ? await newMsg.fetch().catch(() => null) : newMsg;
+      if (!fullNewMsg || fullNewMsg.author?.bot) return;
 
-    const cached = msgCache.get(fullNewMsg.id);
-    if (cached) {
-      await guildLogger.logMessageEdit(cached, fullNewMsg);
+      const cached = msgCache.get(fullNewMsg.id);
+      if (cached) {
+        await guildLogger.logMessageEdit(cached, fullNewMsg);
+      }
+
+      // Run automod on edited content
+      await autoMod.performAutomod(fullNewMsg);
+
+      // Update cache with edited message
+      msgCache.put(fullNewMsg);
+    } catch (err) {
+      console.error('[MessageUpdate Error]:', err);
     }
-
-    // Run automod on edited content
-    await autoMod.performAutomod(fullNewMsg);
-
-    // Update cache with edited message
-    msgCache.put(fullNewMsg);
   });
 
   // --- Message Delete (Delete audit) ---
   client.on(Events.MessageDelete, async message => {
-    if (!message.guild) return;
+    try {
+      if (!message.guild) return;
 
-    const cached = msgCache.delete(message.id);
-    if (cached) {
-      const channelName = 'name' in message.channel ? (message.channel as any).name : 'desconocido';
-      await guildLogger.logMessageDelete(cached, channelName);
+      const cached = msgCache.delete(message.id);
+      if (cached) {
+        const channelName = 'name' in message.channel ? (message.channel as any).name : 'desconocido';
+        await guildLogger.logMessageDelete(cached, channelName);
+      }
+    } catch (err) {
+      console.error('[MessageDelete Error]:', err);
     }
   });
 
   // --- Member Join ---
   client.on(Events.GuildMemberAdd, async (member: GuildMember) => {
-    // 1. Anti-Raid check
-    const kickedByRaid = await antiRaid.onMemberJoin(member);
-    if (kickedByRaid) return;
+    try {
+      // 1. Anti-Raid check
+      const kickedByRaid = await antiRaid.onMemberJoin(member);
+      if (kickedByRaid) return;
 
-    // 2. Auto-Dehoist check
-    const am = await db.getAutomodSettings(member.guild.id);
-    if (am.auto_dehoist) {
-      await AutoDehoist.checkAndDehoist(member, am.auto_dehoist);
+      // 2. Auto-Dehoist check
+      const am = await db.getAutomodSettings(member.guild.id);
+      if (am.auto_dehoist) {
+        await AutoDehoist.checkAndDehoist(member, am.auto_dehoist);
+      }
+
+      // 3. Server log
+      await guildLogger.logMemberJoin(member);
+    } catch (err) {
+      console.error('[GuildMemberAdd Error]:', err);
     }
-
-    // 3. Server log
-    await guildLogger.logMemberJoin(member);
   });
 
   // --- Member Leave ---
   client.on(Events.GuildMemberRemove, async member => {
-    await guildLogger.logMemberLeave(member);
+    try {
+      await guildLogger.logMemberLeave(member);
+    } catch (err) {
+      console.error('[GuildMemberRemove Error]:', err);
+    }
   });
 
   // --- Member Update (Dehoist on nick changes) ---
   client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
-    if (oldMember.displayName !== newMember.displayName) {
-      const am = await db.getAutomodSettings(newMember.guild.id);
-      if (am.auto_dehoist) {
-        await AutoDehoist.checkAndDehoist(newMember, am.auto_dehoist);
+    try {
+      if (oldMember.displayName !== newMember.displayName) {
+        const am = await db.getAutomodSettings(newMember.guild.id);
+        if (am.auto_dehoist) {
+          await AutoDehoist.checkAndDehoist(newMember, am.auto_dehoist);
+        }
       }
+    } catch (err) {
+      console.error('[GuildMemberUpdate Error]:', err);
     }
   });
 
   // --- Voice State Update ---
   client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceState) => {
-    await guildLogger.logVoiceStateUpdate(oldState, newState);
+    try {
+      await guildLogger.logVoiceStateUpdate(oldState, newState);
+    } catch (err) {
+      console.error('[VoiceStateUpdate Error]:', err);
+    }
   });
 }

@@ -24,14 +24,17 @@ async function main() {
   const db = new Database();
 
   if (!config.mongoUri || config.mongoUri.includes('abcde.mongodb.net')) {
-    console.warn('⚠️ [AVISO]: MONGODB_URI no configurado o es una plantilla.');
-    console.warn('   Configura la URL de tu cluster en el archivo .env (ej. mongodb+srv://...)');
+    console.warn('⚠️ [CONFIGURACIÓN REQUERIDA]: En .env se detecta el subdominio de plantilla "abcde.mongodb.net".');
+    console.warn('   Debes sustituir "cluster0.abcde.mongodb.net" por la URL real de tu clúster de MongoDB Atlas.');
+    console.warn('   (Obtén tu URL en cloud.mongodb.com -> Database -> Connect -> Drivers)');
+    console.warn('   ℹ️ El bot funcionará en modo memoria (comandos como >>help y >>ping funcionarán sin crashear).\n');
   } else {
     try {
       console.log('🔄 Conectando a MongoDB Atlas...');
       await db.connect(config.mongoUri);
     } catch (err: any) {
       console.error('❌ Error conectando a MongoDB Atlas:', err.message);
+      console.warn('   ℹ️ El bot continuará en modo degradado con valores por defecto en memoria.\n');
     }
   }
 

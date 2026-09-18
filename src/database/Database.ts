@@ -1,4 +1,8 @@
 import mongoose from 'mongoose';
+
+// Desactivar buffering de comandos globalmente para que las consultas no se congelen durante 10 segundos si la BD no está conectada
+mongoose.set('bufferCommands', false);
+
 import {
   GuildSettings,
   AutomodSettings,
@@ -19,6 +23,16 @@ export class Database {
   private configCache: Map<string, { config: IGuildConfig; expires: number }> = new Map();
   private cacheTtlMs = 60000; // 1 minute TTL
 
+  public isConnected(): boolean {
+    return mongoose.connection.readyState === 1;
+  }
+
+  private ensureConnected(): void {
+    if (!this.isConnected()) {
+      throw new Error('MongoDB Atlas no está conectado. Por favor actualiza MONGODB_URI en tu archivo .env con la URL real de tu clúster.');
+    }
+  }
+
   public async connect(uri: string): Promise<void> {
     if (!uri) {
       throw new Error('MONGODB_URI no está definido en el entorno.');
@@ -33,16 +47,47 @@ export class Database {
     });
 
     mongoose.connection.on('disconnected', () => {
-      console.warn('⚠️ Desconectado de MongoDB Atlas. Reintentando...');
+      console.warn('⚠️ Desconectado de MongoDB Atlas.');
     });
 
+    // Avoid long hangs if database is offline or unreachable
     await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 10000
+      serverSelectionTimeoutMS: 5000
     });
   }
 
   public async disconnect(): Promise<void> {
     await mongoose.disconnect();
+  }
+
+  private getDefaultConfig(guildId: string): IGuildConfig {
+    return {
+      guildId,
+      prefix: '>>',
+      channels: {},
+      roles: {},
+      automod: {
+        antiInvite: 0,
+        antiCopypasta: 0,
+        antiEveryone: 0,
+        antiReferral: 0,
+        antiDuplicate: 0,
+        dupeDeleteThresh: 2,
+        dupeStrikeThresh: 4,
+        maxLines: 0,
+        maxMentions: 0,
+        autoDehoist: '',
+        autoRaidModeNumber: 0,
+        autoRaidModeTime: 10,
+        resolveUrls: 0
+      },
+      raidMode: false,
+      timezone: 'UTC',
+      punishments: [],
+      ignores: [],
+      inviteWhitelist: [],
+      filters: []
+    } as unknown as IGuildConfig;
   }
 
   // --- Internal Config Fetcher with Cache ---
@@ -53,13 +98,26 @@ export class Database {
       return cached.config;
     }
 
-    let config = await GuildConfigModel.findOne({ guildId });
-    if (!config) {
-      config = await GuildConfigModel.create({ guildId });
+    if (!this.isConnected()) {
+      const fallback = this.getDefaultConfig(guildId);
+      this.configCache.set(guildId, { config: fallback, expires: now + 5000 });
+      return fallback;
     }
 
-    this.configCache.set(guildId, { config, expires: now + this.cacheTtlMs });
-    return config;
+    try {
+      let config = await GuildConfigModel.findOne({ guildId });
+      if (!config) {
+        config = await GuildConfigModel.create({ guildId });
+      }
+
+      this.configCache.set(guildId, { config, expires: now + this.cacheTtlMs });
+      return config;
+    } catch (err) {
+      console.error(`[Database] Error cargando configuración para ${guildId}, usando valores por defecto:`, err);
+      const fallback = this.getDefaultConfig(guildId);
+      this.configCache.set(guildId, { config: fallback, expires: now + 5000 });
+      return fallback;
+    }
   }
 
   public invalidateCache(guildId: string): void {
@@ -85,6 +143,7 @@ export class Database {
   }
 
   public async updateGuildSettings(guildId: string, partial: Partial<GuildSettings>): Promise<void> {
+    this.ensureConnected();
     const updates: any = {};
     if (partial.prefix !== undefined) updates.prefix = partial.prefix;
     if (partial.raid_mode !== undefined) updates.raidMode = partial.raid_mode === 1;
@@ -126,6 +185,7 @@ export class Database {
   }
 
   public async updateAutomodSettings(guildId: string, partial: Partial<AutomodSettings>): Promise<void> {
+    this.ensureConnected();
     const updates: any = {};
     if (partial.anti_invite !== undefined) updates['automod.antiInvite'] = partial.anti_invite;
     if (partial.anti_copypasta !== undefined) updates['automod.antiCopypasta'] = partial.anti_copypasta;
@@ -155,6 +215,7 @@ export class Database {
     action: Action,
     reason: string
   ): Promise<ModCase> {
+    this.ensureConnected();
     const caseNumber = await getNextSequence(guildId, 'caseNumber');
     const timestamp = Date.now();
 
@@ -186,59 +247,81 @@ export class Database {
   }
 
   public async getCase(guildId: string, caseNumber: number): Promise<ModCase | undefined> {
-    const doc = await ModCaseModel.findOne({ guildId, caseNumber });
-    if (!doc) return undefined;
-    return {
-      id: doc._id.toString() as any,
-      guild_id: doc.guildId,
-      case_number: doc.caseNumber,
-      target_id: doc.targetId,
-      target_tag: doc.targetTag,
-      moderator_id: doc.moderatorId,
-      moderator_tag: doc.moderatorTag,
-      action: doc.action as Action,
-      reason: doc.reason,
-      timestamp: doc.timestamp,
-      log_message_id: doc.logMessageId
-    };
+    if (!this.isConnected()) return undefined;
+    try {
+      const doc = await ModCaseModel.findOne({ guildId, caseNumber });
+      if (!doc) return undefined;
+      return {
+        id: doc._id.toString() as any,
+        guild_id: doc.guildId,
+        case_number: doc.caseNumber,
+        target_id: doc.targetId,
+        target_tag: doc.targetTag,
+        moderator_id: doc.moderatorId,
+        moderator_tag: doc.moderatorTag,
+        action: doc.action as Action,
+        reason: doc.reason,
+        timestamp: doc.timestamp,
+        log_message_id: doc.logMessageId
+      };
+    } catch {
+      return undefined;
+    }
   }
 
   public async updateCaseReason(guildId: string, caseNumber: number, newReason: string): Promise<boolean> {
+    this.ensureConnected();
     const res = await ModCaseModel.updateOne({ guildId, caseNumber }, { $set: { reason: newReason } });
     return res.modifiedCount > 0;
   }
 
   public async setCaseLogMessageId(caseId: any, messageId: string): Promise<void> {
-    await ModCaseModel.findByIdAndUpdate(caseId, { logMessageId: messageId });
+    if (!this.isConnected()) return;
+    try {
+      await ModCaseModel.findByIdAndUpdate(caseId, { logMessageId: messageId });
+    } catch {
+      // Ignore background log update error
+    }
   }
 
   public async getUserCases(guildId: string, targetId: string, limit = 10): Promise<ModCase[]> {
-    const docs = await ModCaseModel.find({ guildId, targetId })
-      .sort({ caseNumber: -1 })
-      .limit(limit);
+    if (!this.isConnected()) return [];
+    try {
+      const docs = await ModCaseModel.find({ guildId, targetId })
+        .sort({ caseNumber: -1 })
+        .limit(limit);
 
-    return docs.map(doc => ({
-      id: doc._id.toString() as any,
-      guild_id: doc.guildId,
-      case_number: doc.caseNumber,
-      target_id: doc.targetId,
-      target_tag: doc.targetTag,
-      moderator_id: doc.moderatorId,
-      moderator_tag: doc.moderatorTag,
-      action: doc.action as Action,
-      reason: doc.reason,
-      timestamp: doc.timestamp,
-      log_message_id: doc.logMessageId
-    }));
+      return docs.map(doc => ({
+        id: doc._id.toString() as any,
+        guild_id: doc.guildId,
+        case_number: doc.caseNumber,
+        target_id: doc.targetId,
+        target_tag: doc.targetTag,
+        moderator_id: doc.moderatorId,
+        moderator_tag: doc.moderatorTag,
+        action: doc.action as Action,
+        reason: doc.reason,
+        timestamp: doc.timestamp,
+        log_message_id: doc.logMessageId
+      }));
+    } catch {
+      return [];
+    }
   }
 
   // --- Strikes ---
   public async getStrikes(guildId: string, userId: string): Promise<number> {
-    const doc = await StrikeModel.findOne({ guildId, userId });
-    return doc?.strikes || 0;
+    if (!this.isConnected()) return 0;
+    try {
+      const doc = await StrikeModel.findOne({ guildId, userId });
+      return doc?.strikes || 0;
+    } catch {
+      return 0;
+    }
   }
 
   public async addStrikes(guildId: string, userId: string, count: number): Promise<number> {
+    this.ensureConnected();
     const current = await this.getStrikes(guildId, userId);
     const updated = Math.max(0, current + count);
     const now = Date.now();
@@ -257,6 +340,7 @@ export class Database {
   }
 
   public async resetStrikes(guildId: string, userId: string): Promise<void> {
+    this.ensureConnected();
     await StrikeModel.deleteOne({ guildId, userId });
   }
 
@@ -272,6 +356,7 @@ export class Database {
   }
 
   public async setPunishment(guildId: string, strikeCount: number, action: Action, durationSeconds = 0): Promise<void> {
+    this.ensureConnected();
     await GuildConfigModel.updateOne(
       { guildId },
       { $pull: { punishments: { strikeCount } } }
@@ -285,6 +370,7 @@ export class Database {
   }
 
   public async removePunishment(guildId: string, strikeCount: number): Promise<boolean> {
+    this.ensureConnected();
     const res = await GuildConfigModel.updateOne(
       { guildId },
       { $pull: { punishments: { strikeCount } } }
@@ -300,6 +386,7 @@ export class Database {
 
   // --- Temp Punishments ---
   public async addTempPunishment(guildId: string, userId: string, action: Action, durationSeconds: number): Promise<TempPunishment> {
+    this.ensureConnected();
     const now = Date.now();
     const expiresAt = now + durationSeconds * 1000;
 
@@ -322,29 +409,45 @@ export class Database {
   }
 
   public async getExpiredPunishments(now = Date.now()): Promise<TempPunishment[]> {
-    const docs = await TempPunishmentModel.find({ expiresAt: { $lte: now } });
-    return docs.map(doc => ({
-      id: doc._id.toString() as any,
-      guild_id: doc.guildId,
-      user_id: doc.userId,
-      action: doc.action as Action,
-      expires_at: doc.expiresAt,
-      created_at: doc.createdAt
-    }));
+    if (!this.isConnected()) return [];
+    try {
+      const docs = await TempPunishmentModel.find({ expiresAt: { $lte: now } });
+      return docs.map(doc => ({
+        id: doc._id.toString() as any,
+        guild_id: doc.guildId,
+        user_id: doc.userId,
+        action: doc.action as Action,
+        expires_at: doc.expiresAt,
+        created_at: doc.createdAt
+      }));
+    } catch {
+      return [];
+    }
   }
 
   public async removeTempPunishment(id: any): Promise<void> {
-    await TempPunishmentModel.findByIdAndDelete(id);
+    if (!this.isConnected()) return;
+    try {
+      await TempPunishmentModel.findByIdAndDelete(id);
+    } catch {
+      // Ignore
+    }
   }
 
   public async removeUserTempPunishments(guildId: string, userId: string, action?: Action): Promise<void> {
-    const query: any = { guildId, userId };
-    if (action) query.action = action;
-    await TempPunishmentModel.deleteMany(query);
+    if (!this.isConnected()) return;
+    try {
+      const query: any = { guildId, userId };
+      if (action) query.action = action;
+      await TempPunishmentModel.deleteMany(query);
+    } catch {
+      // Ignore
+    }
   }
 
   // --- Ignores ---
   public async addIgnore(guildId: string, entityId: string, type: 'channel' | 'role' | 'user'): Promise<void> {
+    this.ensureConnected();
     await GuildConfigModel.updateOne(
       { guildId },
       { $addToSet: { ignores: { entityId, type } } },
@@ -354,6 +457,7 @@ export class Database {
   }
 
   public async removeIgnore(guildId: string, entityId: string): Promise<boolean> {
+    this.ensureConnected();
     const res = await GuildConfigModel.updateOne(
       { guildId },
       { $pull: { ignores: { entityId } } }
@@ -375,6 +479,7 @@ export class Database {
 
   // --- Invite Whitelist ---
   public async addInviteWhitelist(guildId: string, target: string): Promise<void> {
+    this.ensureConnected();
     await GuildConfigModel.updateOne(
       { guildId },
       { $addToSet: { inviteWhitelist: target.toLowerCase() } },
@@ -384,6 +489,7 @@ export class Database {
   }
 
   public async removeInviteWhitelist(guildId: string, target: string): Promise<boolean> {
+    this.ensureConnected();
     const res = await GuildConfigModel.updateOne(
       { guildId },
       { $pull: { inviteWhitelist: target.toLowerCase() } }
@@ -416,6 +522,7 @@ export class Database {
   }
 
   public async addFilter(guildId: string, pattern: string, isRegex: boolean, strikes = 1): Promise<number> {
+    this.ensureConnected();
     const config = await this.getRawGuildConfig(guildId);
     const newId = (config.filters.length > 0 ? Math.max(...config.filters.map(f => f.id)) : 0) + 1;
 
@@ -429,6 +536,7 @@ export class Database {
   }
 
   public async removeFilter(guildId: string, idOrPattern: string): Promise<boolean> {
+    this.ensureConnected();
     const isNum = !isNaN(Number(idOrPattern));
     const filterQuery = isNum ? { id: Number(idOrPattern) } : { pattern: idOrPattern };
 
