@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cosmic Bot — Panel de Control & Moderación Avanzada</title>
+  <meta name="description" content="Dashboard web para Cosmic (Vortex Clone) en TypeScript, Sapphire Framework y MongoDB Atlas. Gestiona la seguridad de tu servidor de Discord en tiempo real.">
+  <link rel="stylesheet" href="/styles/main.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌀</text></svg>">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="container nav-content">
+      <a href="/" class="brand">
+        <div class="brand-icon">🌀</div>
+        <span>Cosmic</span>
+      </a>
+
+      <div class="nav-links">
+        <a href="#features" class="nav-link">Características</a>
+        <a href="#stats" class="nav-link">Estado</a>
+        <a href="https://github.com/Zer0Dev-exe/VortexClone" target="_blank" class="nav-link">GitHub</a>
+        <div id="auth-nav-container">
+          <a href="/auth/login" class="btn btn-discord btn-sm">
+            <span>Iniciar Sesión con Discord</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container">
+      <div class="hero-pill">
+        <span>⚡</span> Sapphire Framework v5 + MongoDB Atlas Cloud
+      </div>
+
+      <h1 class="hero-title">
+        El Control Total de tu Servidor de Discord en <span class="gradient-text">Tiempo Real</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        Potente recreación de <strong>Vortex</strong> optimizada para Discord.js v14. AutoMod inteligente, escalado automático de sanciones, auditoría 360° y panel de configuración web en la nube sin latencia.
+      </p>
+
+      <div class="hero-actions">
+        <a href="/dashboard" class="btn btn-primary" id="btn-enter-dashboard">
+          <span>🚀 Entrar al Dashboard</span>
+        </a>
+        <a href="https://discord.com/oauth2/authorize?client_id=1550403576990531755&permissions=1099511627775&scope=bot%20applications.commands" target="_blank" class="btn btn-secondary">
+          <span>➕ Invitar a Cosmic</span>
+        </a>
+        <a href="/auth/login?demo=true" class="btn btn-secondary" style="border-style: dashed;" title="Prueba el panel de control instantáneamente sin configurar OAuth2">
+          <span>🧪 Modo Demo</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Live Stats Bar -->
+  <section class="container" id="stats">
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-icon">🛡️</div>
+        <div>
+          <div class="stat-value" id="stat-servers">--</div>
+          <div class="stat-label">Servidores Protegidos</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon cyan">👥</div>
+        <div>
+          <div class="stat-value" id="stat-users">--</div>
+          <div class="stat-label">Miembros Administrados</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">⚡</div>
+        <div>
+          <div class="stat-value" id="stat-ping">-- ms</div>
+          <div class="stat-label">Latencia de Gateway</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon emerald">☁️</div>
+        <div>
+          <div class="stat-value" id="stat-db">Atlas M0</div>
+          <div class="stat-label">Base de Datos Cloud</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Core Features Grid -->
+  <section class="container" id="features" style="padding: 40px 0;">
+    <div style="text-align: center; margin-bottom: 40px;">
+      <h2 style="font-size: 2.2rem; margin-bottom: 12px;">Seguridad de Élite para tu Comunidad</h2>
+      <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto;">Todo lo que necesitas para mantener tu servidor seguro y libre de spam, raids y comportamientos tóxicos.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🛡️</div>
+        <h3 class="feature-title">AutoMod Proactivo</h3>
+        <p class="feature-desc">Filtro de invitaciones evasivas (discord.gg), detección de spam consecutivo, control de saltos de línea excesivos y bloqueo de menciones indebidas.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🚨</div>
+        <h3 class="feature-title">Escudo Anti-Raid</h3>
+        <p class="feature-desc">Detección de oleadas masivas de cuentas bot. Cierra el servidor automáticamente e incrementa el nivel de verificación al instante.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">⚖️</div>
+        <h3 class="feature-title">Escalado de Sanciones</h3>
+        <p class="feature-desc">Asigna castigos automáticos conforme un usuario acumula strikes: desde avisos y silencios de 1 hora hasta expulsión o baneo definitivo.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📜</div>
+        <h3 class="feature-title">Auditoría 360° en Tiempo Real</h3>
+        <p class="feature-desc">Registro detallado en canales dedicados de Modlog, eliminaciones/ediciones de mensajes (con historial en caché), uniones y canales de voz.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">⚙️</div>
+        <h3 class="feature-title">Configuración Web Sin Comandos</h3>
+        <p class="feature-desc">Modifica prefijos, canales de logs, reglas de automod y motivos de casos directamente desde este dashboard sin memorizar comandos.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">💎</div>
+        <h3 class="feature-title">Rendimiento Cero Latencia</h3>
+        <p class="feature-desc">Construido con Sapphire Framework v5 y MongoDB Atlas con caché en memoria. Sin bases de datos locales en disco ni riesgo de bloqueos.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer style="border-top: 1px solid var(--border-subtle); padding: 40px 0; margin-top: 60px; text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
+    <div class="container">
+      <p style="margin-bottom: 8px;"><strong>Cosmic</strong> — Inspirado en <a href="https://github.com/jagrosh/Vortex" target="_blank" style="color: var(--accent-cyan);">jagrosh/Vortex</a>. Reescrito en TypeScript & Sapphire.</p>
+      <p>Desarrollado con ❤️ por <a href="https://github.com/Zer0Dev-exe" target="_blank" style="color: var(--accent-purple);">Zer0Dev-exe</a>. Licencia MIT.</p>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { API } from '/js/api.js';
+
+    // Fetch user status & stats
+    async function init() {
+      try {
+        const [me, stats] = await Promise.all([
+          API.getMe().catch(() => ({ isAuthenticated: false })),
+          API.getStats().catch(() => null)
+        ]);
+
+        // Update nav
+        const authContainer = document.getElementById('auth-nav-container');
+        if (me.isAuthenticated && me.user) {
+          authContainer.innerHTML = `
+            <div class="user-badge">
+              <img class="user-avatar" src="${me.user.avatar ? `https://cdn.discordapp.com/avatars/${me.user.id}/${me.user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="Avatar">
+              <span class="user-name">${me.user.globalName || me.user.username}</span>
+              <a href="/dashboard" class="btn btn-primary btn-sm" style="margin-left: 8px;">Panel</a>
+              <a href="/auth/logout" class="btn btn-secondary btn-sm">Salir</a>
+            </div>
+          `;
+        }
+
+        // Update stats
+        if (stats) {
+          document.getElementById('stat-servers').textContent = stats.guildsCount || 0;
+          document.getElementById('stat-users').textContent = (stats.usersCount || 0).toLocaleString();
+          document.getElementById('stat-ping').textContent = `${Math.max(0, stats.ping)} ms`;
+          document.getElementById('stat-db').textContent = stats.dbConnected ? 'Atlas Conectado' : 'Modo Memoria';
+          document.getElementById('stat-db').style.color = stats.dbConnected ? '#10b981' : '#f59e0b';
+        }
+      } catch (err) {
+        console.warn('Error loading stats:', err);
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

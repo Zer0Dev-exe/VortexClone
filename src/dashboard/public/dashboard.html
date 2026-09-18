@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cosmic Dashboard — Panel de Control</title>
+  <link rel="stylesheet" href="/styles/main.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌀</text></svg>">
+</head>
+<body>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container"></div>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="container nav-content">
+      <div style="display: flex; align-items: center; gap: 20px;">
+        <a href="/dashboard" class="brand" id="brand-link">
+          <div class="brand-icon">🌀</div>
+          <span>Cosmic</span>
+        </a>
+        <div id="breadcrumb-container" style="display: flex; align-items: center; gap: 8px; font-size: 0.95rem; color: var(--text-secondary);">
+          <!-- Dynamic breadcrumbs rendered here -->
+        </div>
+      </div>
+
+      <div class="user-menu" id="user-menu-container">
+        <!-- Dynamic user profile rendered here -->
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="container" style="padding-top: 30px; padding-bottom: 80px;">
+
+    <!-- ==========================================
+         VIEW 1: GUILD SELECTOR
+         ========================================== -->
+    <div id="view-guild-selector">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px;">
+        <div>
+          <h1 style="font-size: 2.2rem; margin-bottom: 6px;">Tus Servidores</h1>
+          <p style="color: var(--text-secondary);">Selecciona un servidor de Discord para administrar su seguridad y configuración.</p>
+        </div>
+
+        <div style="width: 100%; max-width: 320px;">
+          <input type="text" id="server-search-input" class="form-input" placeholder="🔍 Buscar servidor...">
+        </div>
+      </div>
+
+      <div id="guilds-loading" style="text-align: center; padding: 60px 0; color: var(--text-secondary);">
+        <div style="font-size: 2.5rem; margin-bottom: 12px; animation: pulse-glow 1.5s infinite;">🌀</div>
+        <p>Cargando servidores de Discord...</p>
+      </div>
+
+      <div class="server-grid" id="server-grid" style="display: none;">
+        <!-- Server cards rendered dynamically by app.js -->
+      </div>
+    </div>
+
+    <!-- ==========================================
+         VIEW 2: GUILD MANAGEMENT HUB
+         ========================================== -->
+    <div id="view-guild-hub" style="display: none;">
+      
+      <!-- Server Header Banner -->
+      <div class="hub-header">
+        <div class="hub-server-info">
+          <div id="hub-server-avatar" class="hub-avatar">🛡️</div>
+          <div>
+            <h1 class="hub-title" id="hub-server-name">Servidor</h1>
+            <div class="hub-meta">
+              <span id="hub-member-count">👥 0 Miembros</span>
+              <span>•</span>
+              <span id="hub-cases-count">🔨 0 Casos</span>
+              <span>•</span>
+              <span id="hub-strikes-count">🚩 0 Strikes Activos</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <button id="btn-back-to-servers" class="btn btn-secondary btn-sm">
+            <span>⬅️ Cambiar Servidor</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabs Navigation -->
+      <div class="tabs-nav">
+        <button class="tab-btn active" data-tab="tab-overview">📊 Resumen</button>
+        <button class="tab-btn" data-tab="tab-general">⚙️ General & Roles</button>
+        <button class="tab-btn" data-tab="tab-logs">📜 Canales de Logs</button>
+        <button class="tab-btn" data-tab="tab-automod">🛡️ AutoMod Suite</button>
+        <button class="tab-btn" data-tab="tab-punishments">⚖️ Sanciones</button>
+        <button class="tab-btn" data-tab="tab-cases">🔨 Casos de Moderación</button>
+        <button class="tab-btn" data-tab="tab-strikes">⚡ Gestión de Strikes</button>
+      </div>
+
+      <!-- TAB 1: OVERVIEW -->
+      <div class="tab-pane active" id="tab-overview">
+        <div class="stats-bar" style="margin-top: 0;">
+          <div class="stat-card">
+            <div class="stat-icon">🔨</div>
+            <div>
+              <div class="stat-value" id="overview-cases">0</div>
+              <div class="stat-label">Total de Sanciones / Casos</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon cyan">🚩</div>
+            <div>
+              <div class="stat-value" id="overview-strikes">0</div>
+              <div class="stat-label">Infracciones / Strikes Activos</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon emerald">🛡️</div>
+            <div>
+              <div class="stat-value" id="overview-automod-status">Activo</div>
+              <div class="stat-label">Estado de AutoMod</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">⌨️</div>
+            <div>
+              <div class="stat-value mono" id="overview-prefix">>></div>
+              <div class="stat-label">Prefijo del Servidor</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">🚨 Modo Anti-Raid / Aislamiento</h3>
+          <p class="card-desc">Activa el modo de emergencia para mitigar ataques masivos. Bloquea el chat y eleva la verificación de seguridad.</p>
+          <div class="switch-group">
+            <div class="switch-info">
+              <h4>Estado del Modo Raid</h4>
+              <p>Habilitar para aislar el servidor de inmediato</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="overview-raidmode-switch">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: GENERAL SETTINGS -->
+      <div class="tab-pane" id="tab-general">
+        <form id="form-general-settings">
+          <div class="card">
+            <h3 class="card-title">⚙️ Ajustes del Bot</h3>
+            <p class="card-desc">Personaliza la forma en que Cosmic interactúa en tu comunidad.</p>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label" for="setting-prefix">Prefijo de Comandos Textuales</label>
+                <input type="text" id="setting-prefix" class="form-input mono" maxlength="10" placeholder=">>" required>
+                <small style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px; display: block;">Ejemplo: >>, !, c!</small>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="setting-timezone">Zona Horaria</label>
+                <select id="setting-timezone" class="form-select">
+                  <option value="UTC">UTC (Tiempo Universal)</option>
+                  <option value="Europe/Madrid">Europe/Madrid (España)</option>
+                  <option value="America/Mexico_City">America/Mexico_City (México)</option>
+                  <option value="America/Bogota">America/Bogota (Colombia)</option>
+                  <option value="America/Argentina/Buenos_Aires">America/Buenos_Aires (Argentina)</option>
+                  <option value="America/Santiago">America/Santiago (Chile)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 class="card-title">👑 Roles de Moderación y Silencio</h3>
+            <p class="card-desc">Define los roles que el bot utilizará para aplicar sanciones y otorgar permisos.</p>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label" for="setting-mod-role">Rol de Moderador</label>
+                <select id="setting-mod-role" class="form-select">
+                  <option value="">-- Ninguno asignado --</option>
+                </select>
+                <small style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px; display: block;">Miembros con este rol pueden moderar y emitir strikes.</small>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="setting-mute-role">Rol de Silencio (Muted)</label>
+                <select id="setting-mute-role" class="form-select">
+                  <option value="">-- Usar Timeout Nativo de Discord --</option>
+                </select>
+                <small style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px; display: block;">Rol opcional para restringir hablar y enviar mensajes.</small>
+              </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+              <button type="submit" class="btn btn-primary">
+                <span>💾 Guardar Cambios Generales</span>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- TAB 3: LOG CHANNELS -->
+      <div class="tab-pane" id="tab-logs">
+        <form id="form-log-channels">
+          <div class="card">
+            <h3 class="card-title">📜 Canales de Registro y Auditoría</h3>
+            <p class="card-desc">Elige dónde enviará Cosmic los registros detallados de cada evento del servidor.</p>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label" for="log-channel-modlog">Canal de Modlog (Sanciones y Casos)</label>
+                <select id="log-channel-modlog" class="form-select">
+                  <option value="">-- Deshabilitado --</option>
+                </select>
+                <small style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px; display: block;">Registra expulsiones, baneos, silencios y strikes con casos correlativos.</small>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="log-channel-messagelog">Canal de Messagelog (Ediciones y Borrados)</label>
+                <select id="log-channel-messagelog" class="form-select">
+                  <option value="">-- Deshabilitado --</option>
+                </select>
+                <small style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px; display: block;">Muestra qué mensaje fue borrado o editado con historial antes/después.</small>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="log-channel-serverlog">Canal de Serverlog (Uniones y Salidas)</label>
+                <select id="log-channel-serverlog" class="form-select">
+                  <option value="">-- Deshabilitado --</option>
+                </select>
+                <small style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px; display: block;">Registra cuándo un miembro entra o sale del servidor y antigüedad de la cuenta.</small>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="log-channel-voicelog">Canal de Voicelog (Actividad de Voz)</label>
+                <select id="log-channel-voicelog" class="form-select">
+                  <option value="">-- Deshabilitado --</option>
+                </select>
+                <small style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px; display: block;">Registra conexiones, desconexiones y cambios de canal de voz.</small>
+              </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+              <button type="submit" class="btn btn-primary">
+                <span>💾 Guardar Canales de Logs</span>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- TAB 4: AUTOMOD SUITE -->
+      <div class="tab-pane" id="tab-automod">
+        <form id="form-automod-settings">
+          <div class="card">
+            <h3 class="card-title">🛡️ Reglas de Seguridad Básicas</h3>
+            <p class="card-desc">Configuración proactiva para mantener el chat limpio en todo momento.</p>
+
+            <div class="switch-group">
+              <div class="switch-info">
+                <h4>Filtro Anti-Invitaciones</h4>
+                <p>Detecta y bloquea enlaces a otros servidores de Discord (discord.gg, etc.).</p>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <select id="automod-anti-invite" class="form-select" style="width: auto;">
+                  <option value="0">Desactivado</option>
+                  <option value="1">Borrar mensaje (Sin strike)</option>
+                  <option value="2">Borrar + 1 Strike</option>
+                  <option value="3">Borrar + 2 Strikes</option>
+                  <option value="4">Borrar + 3 Strikes</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="switch-group">
+              <div class="switch-info">
+                <h4>Anti-Spam de Mensajes Duplicados</h4>
+                <p>Detecta mensajes idénticos enviados en ráfaga por un mismo usuario.</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="automod-anti-duplicate">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="switch-group">
+              <div class="switch-info">
+                <h4>Anti-Copypasta</h4>
+                <p>Bloquea bloques de texto repetitivos o spam kilométrico en una sola línea.</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="automod-anti-copypasta">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="switch-group">
+              <div class="switch-info">
+                <h4>Anti-Everyone / Anti-Here</h4>
+                <p>Elimina menciones globales de usuarios no autorizados.</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="automod-anti-everyone">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="switch-group">
+              <div class="switch-info">
+                <h4>Anti-Referidos & Enlaces Sospechosos</h4>
+                <p>Bloquea URLs de esquemas de referidos, acortadores engañosos o phishing.</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="automod-anti-referral">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="switch-group">
+              <div class="switch-info">
+                <h4>Auto-Dehoist (Orden Alfabético)</h4>
+                <p>Renombra automáticamente a miembros con caracteres que alteran el orden (ej. !, #, * al inicio de su nombre).</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="automod-auto-dehoist">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 class="card-title">📏 Límites Numéricos de Mensajes</h3>
+            <p class="card-desc">Establece límites estrictos de spam visual y masivo.</p>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label" for="automod-max-mentions">Máximo de Menciones por Mensaje</label>
+                <input type="number" id="automod-max-mentions" class="form-input" min="0" max="50" placeholder="0 (Sin límite)">
+                <small style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px; display: block;">0 para desactivar.</small>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="automod-max-lines">Máximo de Saltos de Línea por Mensaje</label>
+                <input type="number" id="automod-max-lines" class="form-input" min="0" max="100" placeholder="0 (Sin límite)">
+                <small style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px; display: block;">Previene inundar el chat verticalmente.</small>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="automod-raid-threshold">Umbral Detección Anti-Raid (Uniones)</label>
+                <input type="number" id="automod-raid-threshold" class="form-input" min="0" max="50" placeholder="0 (Desactivado)">
+                <small style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px; display: block;">Número de miembros que entran en la ventana de tiempo.</small>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="automod-raid-time">Ventana de Tiempo Anti-Raid (Segundos)</label>
+                <input type="number" id="automod-raid-time" class="form-input" min="5" max="60" value="10">
+                <small style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px; display: block;">Segundos en los que se cuenta la ráfaga de uniones.</small>
+              </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+              <button type="submit" class="btn btn-primary">
+                <span>💾 Guardar Reglas de AutoMod</span>
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <!-- Whitelist & Filters Sub-Cards -->
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div>
+              <h3 class="card-title">🔗 Lista Blanca de Invitaciones (Whitelist)</h3>
+              <p class="card-desc" style="margin-bottom: 0;">Servidores o códigos de invitación autorizados que no serán bloqueados.</p>
+            </div>
+            <button id="btn-add-whitelist-modal" class="btn btn-secondary btn-sm">➕ Añadir Invitación</button>
+          </div>
+          <div id="whitelist-tags-container" style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <!-- Rendered by app.js -->
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div>
+              <h3 class="card-title">🚫 Filtro de Palabras y Regex Prohibidas</h3>
+              <p class="card-desc" style="margin-bottom: 0;">Palabras clave o patrones regulares que serán purgados del chat con strikes.</p>
+            </div>
+            <button id="btn-add-filter-modal" class="btn btn-secondary btn-sm">➕ Nuevo Filtro</button>
+          </div>
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Patrón / Palabra</th>
+                  <th>Tipo</th>
+                  <th>Strikes</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody id="filters-table-body">
+                <!-- Rendered by app.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 5: PUNISHMENT ESCALATION LADDER -->
+      <div class="tab-pane" id="tab-punishments">
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <h3 class="card-title">⚖️ Escalera Automática de Sanciones</h3>
+              <p class="card-desc" style="margin-bottom: 0;">Configura la penalización que se aplica automáticamente cuando un usuario acumula strikes.</p>
+            </div>
+            <button id="btn-add-punishment-modal" class="btn btn-primary btn-sm">➕ Añadir Escalón</button>
+          </div>
+
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Strikes Requeridos</th>
+                  <th>Acción Aplicada</th>
+                  <th>Duración Temporal</th>
+                  <th>Operación</th>
+                </tr>
+              </thead>
+              <tbody id="punishments-table-body">
+                <!-- Rendered by app.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 6: MODERATION CASES -->
+      <div class="tab-pane" id="tab-cases">
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 16px;">
+            <div>
+              <h3 class="card-title">🔨 Historial de Casos de Moderación</h3>
+              <p class="card-desc" style="margin-bottom: 0;">Registro inmutable de infracciones, sanciones y expulsiones en MongoDB Atlas.</p>
+            </div>
+
+            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+              <select id="cases-filter-action" class="form-select" style="width: auto;">
+                <option value="ALL">Todas las acciones</option>
+                <option value="BAN">Baneos</option>
+                <option value="KICK">Expulsiones</option>
+                <option value="MUTE">Silencios</option>
+                <option value="STRIKE">Strikes</option>
+                <option value="CLEAN">Purgas</option>
+              </select>
+              <input type="text" id="cases-search-input" class="form-input" placeholder="Buscar por usuario o caso..." style="width: 240px;">
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th># Caso</th>
+                  <th>Usuario Infractor</th>
+                  <th>Moderador</th>
+                  <th>Acción</th>
+                  <th>Motivo</th>
+                  <th>Fecha</th>
+                  <th>Editar</th>
+                </tr>
+              </thead>
+              <tbody id="cases-table-body">
+                <!-- Rendered by app.js -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+            <span id="cases-page-info" style="font-size: 0.85rem; color: var(--text-secondary);">Página 1 de 1</span>
+            <div style="display: flex; gap: 8px;">
+              <button id="cases-btn-prev" class="btn btn-secondary btn-sm" disabled>⬅️ Anterior</button>
+              <button id="cases-btn-next" class="btn btn-secondary btn-sm" disabled>Siguiente ➡️</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 7: ACTIVE STRIKES -->
+      <div class="tab-pane" id="tab-strikes">
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 16px;">
+            <div>
+              <h3 class="card-title">⚡ Miembros con Infracciones Activas</h3>
+              <p class="card-desc" style="margin-bottom: 0;">Consulta y modifica los strikes acumulados de los usuarios de tu servidor.</p>
+            </div>
+            <button id="btn-add-strike-modal" class="btn btn-primary btn-sm">➕ Aplicar Strike</button>
+          </div>
+
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>ID del Usuario</th>
+                  <th>Strikes Acumulados</th>
+                  <th>Última Infracción</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="strikes-table-body">
+                <!-- Rendered by app.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ==========================================
+       MODALS
+       ========================================== -->
+
+  <!-- Edit Case Reason Modal -->
+  <div class="modal-backdrop" id="modal-edit-reason">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Editar Motivo del Caso <span id="modal-case-num" class="mono">#0</span></h3>
+        <button class="modal-close" data-close-modal="modal-edit-reason">&times;</button>
+      </div>
+      <form id="form-edit-reason">
+        <input type="hidden" id="modal-edit-case-number">
+        <div class="form-group">
+          <label class="form-label" for="modal-input-reason">Nuevo Motivo</label>
+          <textarea id="modal-input-reason" class="form-input" rows="4" placeholder="Especifica la justificación..." required></textarea>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="button" class="btn btn-secondary btn-sm" data-close-modal="modal-edit-reason">Cancelar</button>
+          <button type="submit" class="btn btn-primary btn-sm">Guardar Motivo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Punishment Modal -->
+  <div class="modal-backdrop" id="modal-add-punishment">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Añadir Regla de Escalado</h3>
+        <button class="modal-close" data-close-modal="modal-add-punishment">&times;</button>
+      </div>
+      <form id="form-add-punishment">
+        <div class="form-group">
+          <label class="form-label" for="modal-punishment-strikes">Cantidad de Strikes</label>
+          <input type="number" id="modal-punishment-strikes" class="form-input" min="1" max="20" placeholder="Ej: 3" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="modal-punishment-action">Acción Disciplinaria</label>
+          <select id="modal-punishment-action" class="form-select" required>
+            <option value="WARN">Aviso / Advertencia (WARN)</option>
+            <option value="TEMPMUTE">Silencio Temporal (TEMPMUTE)</option>
+            <option value="MUTE">Silencio Indefinido (MUTE)</option>
+            <option value="KICK">Expulsión del Servidor (KICK)</option>
+            <option value="TEMPBAN">Baneo Temporal (TEMPBAN)</option>
+            <option value="BAN">Baneo Definitivo (BAN)</option>
+          </select>
+        </div>
+        <div class="form-group" id="modal-punishment-duration-group">
+          <label class="form-label" for="modal-punishment-duration">Duración (en segundos)</label>
+          <input type="number" id="modal-punishment-duration" class="form-input" placeholder="Ej: 3600 para 1 hora" value="0">
+          <small style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px; display: block;">Solo aplica a TEMPMUTE y TEMPBAN (0 = indefinido).</small>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="button" class="btn btn-secondary btn-sm" data-close-modal="modal-add-punishment">Cancelar</button>
+          <button type="submit" class="btn btn-primary btn-sm">Añadir Regla</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Whitelist Modal -->
+  <div class="modal-backdrop" id="modal-add-whitelist">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Añadir Invitación a Lista Blanca</h3>
+        <button class="modal-close" data-close-modal="modal-add-whitelist">&times;</button>
+      </div>
+      <form id="form-add-whitelist">
+        <div class="form-group">
+          <label class="form-label" for="modal-whitelist-target">Código de Invitación o ID de Servidor</label>
+          <input type="text" id="modal-whitelist-target" class="form-input" placeholder="Ej: discord-developers o 1234567890..." required>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="button" class="btn btn-secondary btn-sm" data-close-modal="modal-add-whitelist">Cancelar</button>
+          <button type="submit" class="btn btn-primary btn-sm">Añadir</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Filter Modal -->
+  <div class="modal-backdrop" id="modal-add-filter">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Añadir Filtro Prohibido</h3>
+        <button class="modal-close" data-close-modal="modal-add-filter">&times;</button>
+      </div>
+      <form id="form-add-filter">
+        <div class="form-group">
+          <label class="form-label" for="modal-filter-pattern">Palabra o Patrón Regex</label>
+          <input type="text" id="modal-filter-pattern" class="form-input" placeholder="Ej: nitro-gratis o (scam|phish)" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="modal-filter-strikes">Strikes a Aplicar</label>
+          <input type="number" id="modal-filter-strikes" class="form-input" min="0" max="10" value="1">
+        </div>
+        <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+          <input type="checkbox" id="modal-filter-is-regex" style="width: 18px; height: 18px;">
+          <label for="modal-filter-is-regex" style="font-size: 0.9rem; color: var(--text-secondary); cursor: pointer;">Es una Expresión Regular (Regex)</label>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="button" class="btn btn-secondary btn-sm" data-close-modal="modal-add-filter">Cancelar</button>
+          <button type="submit" class="btn btn-primary btn-sm">Guardar Filtro</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Apply Strike Modal -->
+  <div class="modal-backdrop" id="modal-add-strike">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Modificar Strikes de Usuario</h3>
+        <button class="modal-close" data-close-modal="modal-add-strike">&times;</button>
+      </div>
+      <form id="form-add-strike">
+        <div class="form-group">
+          <label class="form-label" for="modal-strike-userid">ID de Discord del Usuario</label>
+          <input type="text" id="modal-strike-userid" class="form-input mono" placeholder="Ej: 282859044593598464" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="modal-strike-count">Cantidad (+ para añadir, - para perdonar)</label>
+          <input type="number" id="modal-strike-count" class="form-input" value="1" min="-10" max="10" required>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="button" class="btn btn-secondary btn-sm" data-close-modal="modal-add-strike">Cancelar</button>
+          <button type="submit" class="btn btn-primary btn-sm">Aplicar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

@@ -309,6 +309,89 @@ export class Database {
     }
   }
 
+  public async getGuildCases(
+    guildId: string,
+    limit = 50,
+    page = 1,
+    action?: string,
+    search?: string
+  ): Promise<{ cases: ModCase[]; total: number; page: number; totalPages: number }> {
+    if (!this.isConnected()) return { cases: [], total: 0, page: 1, totalPages: 1 };
+    try {
+      const query: any = { guildId };
+      if (action && action !== 'ALL') {
+        query.action = action;
+      }
+      if (search && search.trim().length > 0) {
+        const s = search.trim();
+        query.$or = [
+          { targetTag: { $regex: s, $options: 'i' } },
+          { targetId: s },
+          { reason: { $regex: s, $options: 'i' } },
+          ...(isNaN(Number(s)) ? [] : [{ caseNumber: Number(s) }])
+        ];
+      }
+
+      const total = await ModCaseModel.countDocuments(query);
+      const totalPages = Math.max(1, Math.ceil(total / limit));
+      const skip = (Math.max(1, page) - 1) * limit;
+
+      const docs = await ModCaseModel.find(query)
+        .sort({ caseNumber: -1 })
+        .skip(skip)
+        .limit(limit);
+
+      const cases = docs.map(doc => ({
+        id: doc._id.toString() as any,
+        guild_id: doc.guildId,
+        case_number: doc.caseNumber,
+        target_id: doc.targetId,
+        target_tag: doc.targetTag,
+        moderator_id: doc.moderatorId,
+        moderator_tag: doc.moderatorTag,
+        action: doc.action as Action,
+        reason: doc.reason,
+        timestamp: doc.timestamp,
+        log_message_id: doc.logMessageId
+      }));
+
+      return { cases, total, page, totalPages };
+    } catch (err) {
+      console.error(`[Database] Error obteniendo casos de ${guildId}:`, err);
+      return { cases: [], total: 0, page: 1, totalPages: 1 };
+    }
+  }
+
+  public async getGuildStrikes(guildId: string, limit = 50): Promise<{ userId: string; strikes: number; updatedAt: number }[]> {
+    if (!this.isConnected()) return [];
+    try {
+      const docs = await StrikeModel.find({ guildId, strikes: { $gt: 0 } })
+        .sort({ strikes: -1 })
+        .limit(limit);
+      return docs.map(d => ({
+        userId: d.userId,
+        strikes: d.strikes,
+        updatedAt: d.updatedAt
+      }));
+    } catch {
+      return [];
+    }
+  }
+
+  public async getGuildStats(guildId: string): Promise<{ totalCases: number; activeStrikesCount: number; activeTempPunishments: number }> {
+    if (!this.isConnected()) return { totalCases: 0, activeStrikesCount: 0, activeTempPunishments: 0 };
+    try {
+      const [totalCases, activeStrikesCount, activeTempPunishments] = await Promise.all([
+        ModCaseModel.countDocuments({ guildId }),
+        StrikeModel.countDocuments({ guildId, strikes: { $gt: 0 } }),
+        TempPunishmentModel.countDocuments({ guildId, expiresAt: { $gt: Date.now() } })
+      ]);
+      return { totalCases, activeStrikesCount, activeTempPunishments };
+    } catch {
+      return { totalCases: 0, activeStrikesCount: 0, activeTempPunishments: 0 };
+    }
+  }
+
   // --- Strikes ---
   public async getStrikes(guildId: string, userId: string): Promise<number> {
     if (!this.isConnected()) return 0;

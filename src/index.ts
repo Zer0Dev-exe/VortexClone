@@ -8,6 +8,7 @@ import { MessageCache } from './logging/MessageCache.js';
 import { AutoMod } from './automod/AutoMod.js';
 import { AntiRaid } from './automod/AntiRaid.js';
 import { PunishmentScheduler } from './scheduler/PunishmentScheduler.js';
+import { DashboardServer } from './dashboard/server.js';
 
 async function main() {
   console.log('========================================================');
@@ -82,9 +83,16 @@ async function main() {
   // 5. Start Temp Punishments Scheduler
   scheduler.start();
 
-  // 6. Graceful Shutdown
+  // 6. Start Web Dashboard
+  const dashboard = new DashboardServer(config.dashboardPort);
+  await dashboard.start().catch((err) => {
+    console.error('⚠️ [Dashboard] Error al inicializar servidor web:', err.message);
+  });
+
+  // 7. Graceful Shutdown
   const shutdown = async () => {
-    console.log('\n🛑 Apagando Vortex Clone...');
+    console.log('\n🛑 Apagando Cosmic / Vortex Clone...');
+    await dashboard.stop().catch(() => {});
     scheduler.stop();
     await db.disconnect().catch(() => {});
     client.destroy();
