@@ -11,8 +11,7 @@ export interface UserSession {
   username: string;
   globalName?: string;
   avatar: string | null;
-  accessToken?: string;
-  isDemo?: boolean;
+  accessToken: string;
 }
 
 // Helper to construct Discord OAuth2 authorization URL
@@ -22,35 +21,11 @@ export function getDiscordAuthUrl(): string {
   return `https://discord.com/api/oauth2/authorize?client_id=${config.clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}`;
 }
 
-// GET /auth/login - Redirect to Discord OAuth2
-authRouter.get('/login', (req: Request, res: Response) => {
-  // If clientSecret is missing, provide a friendly developer demo login option or instruct how to configure
-  if (!config.clientSecret || config.clientSecret === 'your_client_secret_here') {
-    const demo = req.query.demo === 'true';
-    if (demo || !config.clientId) {
-      // Demo developer session
-      const demoUser: UserSession = {
-        id: '123456789012345678',
-        username: 'CosmicAdmin',
-        globalName: 'Cosmic Developer',
-        avatar: null,
-        isDemo: true
-      };
-      const token = jwt.sign(demoUser, config.sessionSecret, { expiresIn: '7d' });
-      res.cookie('cosmic_session', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        sameSite: 'lax'
-      });
-      return res.redirect('/dashboard');
-    }
-
-    return res.redirect(getDiscordAuthUrl());
-  }
-
+// GET /auth/login - Redirect directly to Discord OAuth2
+authRouter.get('/login', (_req: Request, res: Response) => {
   return res.redirect(getDiscordAuthUrl());
 });
+
 
 // GET /auth/callback - Exchange authorization code for token
 authRouter.get('/callback', async (req: Request, res: Response) => {
@@ -109,8 +84,7 @@ authRouter.get('/callback', async (req: Request, res: Response) => {
       username: userData.username,
       globalName: userData.global_name,
       avatar: userData.avatar,
-      accessToken: tokenData.access_token,
-      isDemo: false
+      accessToken: tokenData.access_token
     };
 
     // 3. Issue signed JWT session cookie

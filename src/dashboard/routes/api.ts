@@ -48,11 +48,6 @@ export async function requireGuildAdmin(req: Request, res: Response, next: NextF
     return res.status(401).json({ error: 'No autenticado' });
   }
 
-  // Demo user bypasses permission checks for testing
-  if (user.isDemo) {
-    return next();
-  }
-
   const client = container.client;
   const guild = client.guilds.cache.get(guildId);
 
@@ -128,36 +123,10 @@ apiRouter.get('/guilds', requireAuth, async (req: Request, res: Response) => {
   const user = req.userSession!;
   const client = container.client;
 
-  // In Demo mode, return all guilds Cosmic is currently in
-  if (user.isDemo) {
-    const list = Array.from(client.guilds.cache.values()).map(g => ({
-      id: g.id,
-      name: g.name,
-      icon: g.iconURL({ size: 128 }),
-      memberCount: g.memberCount,
-      botInGuild: true,
-      hasAdmin: true
-    }));
-
-    // If bot isn't in any guild yet, provide a friendly sample guild
-    if (list.length === 0) {
-      list.push({
-        id: '123456789012345678',
-        name: 'Servidor de Pruebas Cosmic',
-        icon: null,
-        memberCount: 42,
-        botInGuild: true,
-        hasAdmin: true
-      });
-    }
-
-    return res.json({ guilds: list });
-  }
-
-  // Real OAuth2 User
   if (!user.accessToken) {
     return res.json({ guilds: [] });
   }
+
 
   try {
     const response = await fetch('https://discord.com/api/v10/users/@me/guilds', {

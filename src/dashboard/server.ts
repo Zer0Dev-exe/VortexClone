@@ -57,11 +57,16 @@ export class DashboardServer {
       res.sendFile(path.join(publicPath, 'dashboard.html'));
     });
 
+    // Internal Documentation Page
+    this.app.get('/docs', (_req, res) => {
+      res.sendFile(path.join(publicPath, 'docs.html'));
+    });
 
     // Fallback for root: landing page
     this.app.get('/', (_req, res) => {
       res.sendFile(path.join(publicPath, 'index.html'));
     });
+
 
 
     // Error handling middleware

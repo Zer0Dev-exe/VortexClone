@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentación Oficial — Cosmic Bot</title>
+  <meta name="description" content="Guía y documentación interna de Cosmic Bot: comandos, configuración, AutoMod, sistema de sanciones y panel web.">
+  <link rel="stylesheet" href="/styles/main.css">
+  <link id="favicon" rel="icon" href="https://cdn.discordapp.com/avatars/1550403576990531755/84aec88cbc5b51490ace42bb634c6eb3.webp?size=128">
+  <style>
+    .docs-layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 40px;
+      margin-top: 40px;
+      align-items: start;
+    }
+    .docs-sidebar {
+      position: sticky;
+      top: 90px;
+      background: var(--bg-surface-glass);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+    }
+    .docs-nav-group {
+      margin-bottom: 20px;
+    }
+    .docs-nav-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+    .docs-nav-link {
+      display: block;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      transition: all var(--transition-fast);
+      margin-bottom: 2px;
+    }
+    .docs-nav-link:hover, .docs-nav-link.active {
+      color: var(--text-primary);
+      background: rgba(139, 92, 246, 0.15);
+      color: var(--accent-cyan);
+    }
+    .docs-section {
+      margin-bottom: 50px;
+    }
+    .docs-section h2 {
+      font-size: 1.8rem;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .docs-section h3 {
+      font-size: 1.25rem;
+      margin: 24px 0 10px;
+      color: var(--accent-cyan);
+    }
+    .docs-section p, .docs-section li {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+    .docs-section ul {
+      padding-left: 24px;
+      margin-bottom: 16px;
+    }
+    pre.code-box {
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      overflow-x: auto;
+      font-size: 0.88rem;
+      color: #38bdf8;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 900px) {
+      .docs-layout { grid-template-columns: 1fr; }
+      .docs-sidebar { position: static; margin-bottom: 30px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="container nav-content">
+      <a href="/" class="brand">
+        <img class="brand-icon" id="bot-avatar-brand" src="https://cdn.discordapp.com/avatars/1550403576990531755/84aec88cbc5b51490ace42bb634c6eb3.webp?size=128" alt="Cosmic Avatar" style="border-radius: var(--radius-md); object-fit: cover;">
+        <span>Cosmic Docs</span>
+      </a>
+
+      <div class="nav-links">
+        <a href="/" class="nav-link">Inicio</a>
+        <a href="/dashboard" class="nav-link">Panel de Control</a>
+        <a href="https://discord.com/oauth2/authorize?client_id=1550403576990531755&permissions=1099511627775&scope=bot%20applications.commands" target="_blank" class="btn btn-secondary btn-sm">➕ Invitar Bot</a>
+        <a href="/auth/login" class="btn btn-discord btn-sm">
+          <span>Iniciar Sesión</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Docs Container -->
+  <div class="container docs-layout">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="docs-sidebar">
+      <div class="docs-nav-group">
+        <div class="docs-nav-title">Comenzando</div>
+        <a href="#intro" class="docs-nav-link">Introducción</a>
+        <a href="#permissions" class="docs-nav-link">Permisos e Invitación</a>
+        <a href="#setup" class="docs-nav-link">Asistente /setup</a>
+      </div>
+
+      <div class="docs-nav-group">
+        <div class="docs-nav-title">Comandos</div>
+        <a href="#cmd-mod" class="docs-nav-link">Moderación</a>
+        <a href="#cmd-automod" class="docs-nav-link">AutoMod</a>
+        <a href="#cmd-settings" class="docs-nav-link">Configuración</a>
+        <a href="#cmd-general" class="docs-nav-link">Generales</a>
+      </div>
+
+      <div class="docs-nav-group">
+        <div class="docs-nav-title">Sistemas Clave</div>
+        <a href="#automod-engine" class="docs-nav-link">Motor de AutoMod</a>
+        <a href="#strikes-ladder" class="docs-nav-link">Escalado de Sanciones</a>
+        <a href="#logs-audit" class="docs-nav-link">Canales de Auditoría</a>
+        <a href="#web-dashboard" class="docs-nav-link">Dashboard & OAuth2</a>
+      </div>
+    </aside>
+
+    <!-- Main Docs Content -->
+    <main>
+      
+      <!-- Section: Introducción -->
+      <section id="intro" class="docs-section">
+        <h2>🌀 Introducción a Cosmic</h2>
+        <p>
+          <strong>Cosmic</strong> es una recreación moderna, ligera y de alto rendimiento del reconocido bot de seguridad <strong>jagrosh/Vortex</strong>.
+          Está diseñado sobre <strong>TypeScript</strong> y <strong>Sapphire Framework v5</strong> con <strong>Discord.js v14</strong>, utilizando <strong>MongoDB Atlas en la nube</strong> y un panel de control web accesible en tiempo real.
+        </p>
+        <p>
+          Elimina por completo la necesidad de Java, dependencias de bases de datos locales en archivos (SQLite) y sharding innecesario para un rendimiento impecable sin lag ni bloqueos.
+        </p>
+      </section>
+
+      <!-- Section: Permisos e Invitación -->
+      <section id="permissions" class="docs-section">
+        <h2>🔑 Permisos e Invitación</h2>
+        <p>Para invitar a Cosmic a tu servidor con los permisos necesarios, utiliza el siguiente enlace oficial:</p>
+        <pre class="code-box">https://discord.com/oauth2/authorize?client_id=1550403576990531755&permissions=1099511627775&scope=bot%20applications.commands</pre>
+        <p><strong>Permisos requeridos por el bot:</strong></p>
+        <ul>
+          <li><strong>Administrator</strong> (o individualmente: Manage Roles, Manage Channels, Kick Members, Ban Members, Moderate Members, Manage Messages, View Audit Log, Send Messages, Embed Links).</li>
+          <li><strong>Jerarquía de Roles:</strong> Asegúrate de que el rol de <em>Cosmic</em> esté posicionado por encima de los miembros y roles que va a moderar en los ajustes de roles de Discord.</li>
+        </ul>
+      </section>
+
+      <!-- Section: Asistente /setup -->
+      <section id="setup" class="docs-section">
+        <h2>🛠️ Asistente de Configuración Rápida</h2>
+        <p>Puedes configurar el bot en pocos segundos ejecutando el comando interactivo en tu servidor de Discord:</p>
+        <pre class="code-box">/setup</pre>
+        <p>El asistente interactivo te guiará paso a paso para asignar:</p>
+        <ul>
+          <li>Canal de Modlog (donde se registran sanciones con números de caso correlativos).</li>
+          <li>Canal de Serverlog (uniones, salidas y antigüedad de miembros).</li>
+          <li>Canal de Messagelog (mensajes borrados o editados).</li>
+          <li>Rol de Moderador y Rol de Silencio (Muted).</li>
+        </ul>
+        <p>Alternativamente, puedes configurarlo todo de forma visual directamente desde el <a href="/dashboard" style="color: var(--accent-cyan); font-weight: 600;">Dashboard Web</a>.</p>
+      </section>
+
+      <!-- Section: Comandos de Moderación -->
+      <section id="cmd-mod" class="docs-section">
+        <h2>🔨 Comandos de Moderación</h2>
+        <p>Todos los comandos admiten ejecución por barra diagonal (<code>/</code>) y prefijo textual (<code>>></code>):</p>
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Comando</th>
+                <th>Sintaxis</th>
+                <th>Descripción</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>/ban</code></td>
+                <td><code>/ban &lt;usuario&gt; [tiempo] [motivo]</code></td>
+                <td>Banea a un usuario (soporta tiempo temporal como <code>1h</code>, <code>1d</code>).</td>
+              </tr>
+              <tr>
+                <td><code>/unban</code></td>
+                <td><code>/unban &lt;id_usuario&gt; [motivo]</code></td>
+                <td>Desbanea a un usuario por su ID.</td>
+              </tr>
+              <tr>
+                <td><code>/kick</code></td>
+                <td><code>/kick &lt;usuario&gt; [motivo]</code></td>
+                <td>Expulsa a un miembro del servidor.</td>
+              </tr>
+              <tr>
+                <td><code>/softban</code></td>
+                <td><code>/softban &lt;usuario&gt; [motivo]</code></td>
+                <td>Banea y desbanea de inmediato para purgar sus mensajes del último día.</td>
+              </tr>
+              <tr>
+                <td><code>/mute</code></td>
+                <td><code>/mute &lt;usuario&gt; [tiempo] [motivo]</code></td>
+                <td>Aplica un aislamiento/timeout nativo o rol de silencio.</td>
+              </tr>
+              <tr>
+                <td><code>/unmute</code></td>
+                <td><code>/unmute &lt;usuario&gt; [motivo]</code></td>
+                <td>Retira la sanción de silencio.</td>
+              </tr>
+              <tr>
+                <td><code>/strike</code></td>
+                <td><code>/strike &lt;usuario&gt; [cantidad] [motivo]</code></td>
+                <td>Aplica strikes manuales y dispara la sanción configurada en la escalera.</td>
+              </tr>
+              <tr>
+                <td><code>/pardon</code></td>
+                <td><code>/pardon &lt;usuario&gt; [cantidad] [motivo]</code></td>
+                <td>Perdona o descuenta strikes de un usuario.</td>
+              </tr>
+              <tr>
+                <td><code>/clean</code></td>
+                <td><code>/clean &lt;cantidad&gt; [filtro] [usuario]</code></td>
+                <td>Purga masiva de mensajes con filtros (<code>all</code>, <code>bots</code>, <code>links</code>).</td>
+              </tr>
+              <tr>
+                <td><code>/check</code></td>
+                <td><code>/check &lt;usuario&gt;</code></td>
+                <td>Muestra historial de casos, strikes acumulados y antigüedad.</td>
+              </tr>
+              <tr>
+                <td><code>/reason</code></td>
+                <td><code>/reason &lt;caso&gt; &lt;nuevo_motivo&gt;</code></td>
+                <td>Modifica el motivo de un caso existente en la base de datos y modlog.</td>
+              </tr>
+              <tr>
+                <td><code>/slowmode</code></td>
+                <td><code>/slowmode &lt;tiempo&gt;</code></td>
+                <td>Ajusta el modo lento de un canal (ej. <code>5s</code>, <code>1m</code>, <code>0</code> para apagar).</td>
+              </tr>
+              <tr>
+                <td><code>/raid</code></td>
+                <td><code>/raid &lt;on|off&gt;</code></td>
+                <td>Activa o desactiva manualmente el modo de aislamiento / Anti-Raid.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Section: Comandos de AutoMod -->
+      <section id="cmd-automod" class="docs-section">
+        <h2>🛡️ Comandos de AutoMod</h2>
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Comando</th>
+                <th>Sintaxis</th>
+                <th>Descripción</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>/antiinvite</code></td>
+                <td><code>/antiinvite &lt;off|del|1|2|3&gt;</code></td>
+                <td>Configura la acción ante invitaciones de Discord no autorizadas.</td>
+              </tr>
+              <tr>
+                <td><code>/maxmentions</code></td>
+                <td><code>/maxmentions &lt;límite&gt;</code></td>
+                <td>Establece el número máximo de menciones permitidas en un mensaje.</td>
+              </tr>
+              <tr>
+                <td><code>/maxlines</code></td>
+                <td><code>/maxlines &lt;límite&gt;</code></td>
+                <td>Establece el límite máximo de saltos de línea por mensaje.</td>
+              </tr>
+              <tr>
+                <td><code>/autodehoist</code></td>
+                <td><code>/autodehoist &lt;carácter|off&gt;</code></td>
+                <td>Renombra automáticamente miembros con caracteres que alteran el orden alfabético.</td>
+              </tr>
+              <tr>
+                <td><code>/autoraidmode</code></td>
+                <td><code>/autoraidmode &lt;uniones&gt; [segundos]</code></td>
+                <td>Dispara el bloqueo automático si <em>N</em> miembros se unen en <em>S</em> segundos.</td>
+              </tr>
+              <tr>
+                <td><code>/filter</code></td>
+                <td><code>/filter &lt;add|remove|list&gt;</code></td>
+                <td>Administra palabras prohibidas y expresiones regulares (Regex).</td>
+              </tr>
+              <tr>
+                <td><code>/whitelist</code></td>
+                <td><code>/whitelist &lt;add|remove|list&gt;</code></td>
+                <td>Administra códigos o servidores autorizados en el filtro anti-invite.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Section: Escalado de Sanciones -->
+      <section id="strikes-ladder" class="docs-section">
+        <h2>⚖️ Sistema de Strikes y Escalado</h2>
+        <p>El sistema de escalado aplica sanciones automáticas conforme un miembro acumula infracciones:</p>
+        <pre class="code-box">
+1 Strike  ➔ Advertencia (WARN)
+2 Strikes ➔ Silencio temporal de 1 hora (TEMPMUTE 3600s)
+3 Strikes ➔ Expulsión del servidor (KICK)
+4 Strikes ➔ Baneo definitivo (BAN)
+        </pre>
+        <p>
+          El programador interno en segundo plano (<code>PunishmentScheduler</code>) monitorea de forma atómica los silencios y baneos temporales, retirándolos automáticamente cuando expira su tiempo.
+        </p>
+      </section>
+
+      <!-- Section: Dashboard Web -->
+      <section id="web-dashboard" class="docs-section">
+        <h2>🌐 Panel Web & Discord OAuth2</h2>
+        <p>El dashboard web se ejecuta en <code>http://localhost:3000</code> y utiliza el protocolo oficial de autenticación de Discord:</p>
+        <ol style="padding-left: 20px; line-height: 1.8; color: var(--text-secondary);">
+          <li>Haz clic en <strong>"Iniciar Sesión con Discord"</strong>.</li>
+          <li>Autoriza la aplicación con los permisos <code>identify</code> y <code>guilds</code>.</li>
+          <li>El panel filtrará automáticamente los servidores donde eres Administrador o tienes permiso de gestión.</li>
+          <li>Podrás modificar cualquier parámetro del bot en tiempo real con efecto inmediato.</li>
+        </ol>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer style="border-top: 1px solid var(--border-subtle); padding: 40px 0; margin-top: 60px; text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
+    <div class="container">
+      <p><strong>Cosmic</strong> — Bot de Moderación, AutoMod & Web Dashboard.</p>
+      <p>Desarrollado con ❤️ por <a href="https://github.com/Zer0Dev-exe" target="_blank" style="color: var(--accent-purple);">Zer0Dev-exe</a>. Licencia MIT.</p>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { API } from '/js/api.js';
+
+    async function loadAvatar() {
+      try {
+        const stats = await API.getStats();
+        if (stats && stats.avatar) {
+          const avatarEl = document.getElementById('bot-avatar-brand');
+          const faviconEl = document.getElementById('favicon');
+          if (avatarEl) avatarEl.src = stats.avatar;
+          if (faviconEl) faviconEl.href = stats.avatar;
+        }
+      } catch {}
+    }
+    loadAvatar();
+  </script>
+</body>
+</html>
