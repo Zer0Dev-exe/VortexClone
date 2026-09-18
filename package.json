@@ -1,0 +1,37 @@
+{
+  "name": "vortex-clone",
+  "version": "1.0.0",
+  "description": "A high-performance Discord moderation and automod bot inspired by jagrosh/Vortex, written in TypeScript and Discord.js v14 without sharding bloat.",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "deploy-commands": "tsx src/deploy-commands.ts",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "discord",
+    "discord.js",
+    "moderation",
+    "automod",
+    "vortex",
+    "antiraid",
+    "bot"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.27.0",
+    "dotenv": "^17.4.2",
+    "mongoose": "^9.10.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.1",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1"
+  }
+}
