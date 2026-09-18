@@ -103,7 +103,10 @@
       <div class="nav-links">
         <a href="/" class="nav-link">Inicio</a>
         <a href="/dashboard" class="nav-link">Panel de Control</a>
-        <a href="https://discord.com/oauth2/authorize?client_id=1550403576990531755&permissions=1099511627775&scope=bot%20applications.commands" target="_blank" class="btn btn-secondary btn-sm">➕ Invitar Bot</a>
+        <a href="https://discord.com/oauth2/authorize?client_id=1550403576990531755&permissions=1099511627775&scope=bot%20applications.commands" target="_blank" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span>Invitar Bot</span>
+        </a>
         <a href="/auth/login" class="btn btn-discord btn-sm">
           <span>Iniciar Sesión</span>
         </a>
@@ -145,7 +148,13 @@
       
       <!-- Section: Introducción -->
       <section id="intro" class="docs-section">
-        <h2>🌀 Introducción a Cosmic</h2>
+        <h2 style="display: flex; align-items: center; gap: 12px;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+          <span>Introducción a Cosmic</span>
+        </h2>
         <p>
           <strong>Cosmic</strong> es una recreación moderna, ligera y de alto rendimiento del reconocido bot de seguridad <strong>jagrosh/Vortex</strong>.
           Está diseñado sobre <strong>TypeScript</strong> y <strong>Sapphire Framework v5</strong> con <strong>Discord.js v14</strong>, utilizando <strong>MongoDB Atlas en la nube</strong> y un panel de control web accesible en tiempo real.
@@ -157,7 +166,12 @@
 
       <!-- Section: Permisos e Invitación -->
       <section id="permissions" class="docs-section">
-        <h2>🔑 Permisos e Invitación</h2>
+        <h2 style="display: flex; align-items: center; gap: 12px;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fcd34d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+          </svg>
+          <span>Permisos e Invitación</span>
+        </h2>
         <p>Para invitar a Cosmic a tu servidor con los permisos necesarios, utiliza el siguiente enlace oficial:</p>
         <pre class="code-box">https://discord.com/oauth2/authorize?client_id=1550403576990531755&permissions=1099511627775&scope=bot%20applications.commands</pre>
         <p><strong>Permisos requeridos por el bot:</strong></p>
@@ -169,7 +183,12 @@
 
       <!-- Section: Asistente /setup -->
       <section id="setup" class="docs-section">
-        <h2>🛠️ Asistente de Configuración Rápida</h2>
+        <h2 style="display: flex; align-items: center; gap: 12px;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+          </svg>
+          <span>Asistente de Configuración Rápida</span>
+        </h2>
         <p>Puedes configurar el bot en pocos segundos ejecutando el comando interactivo en tu servidor de Discord:</p>
         <pre class="code-box">/setup</pre>
         <p>El asistente interactivo te guiará paso a paso para asignar:</p>
@@ -184,7 +203,16 @@
 
       <!-- Section: Comandos de Moderación -->
       <section id="cmd-mod" class="docs-section">
-        <h2>🔨 Comandos de Moderación</h2>
+        <h2 style="display: flex; align-items: center; gap: 12px;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fcd34d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 13l-7.5 7.5c-1.5 1.5-4-1-2.5-2.5L11.5 10.5"></path>
+            <path d="M16 11l4-4"></path>
+            <path d="M14 7l4 4"></path>
+            <path d="M17.5 3.5l3 3"></path>
+            <path d="M3 21h6"></path>
+          </svg>
+          <span>Comandos de Moderación</span>
+        </h2>
         <p>Todos los comandos admiten ejecución por barra diagonal (<code>/</code>) y prefijo textual (<code>>></code>):</p>
         <div class="table-container">
           <table class="table">
@@ -268,7 +296,12 @@
 
       <!-- Section: Comandos de AutoMod -->
       <section id="cmd-automod" class="docs-section">
-        <h2>🛡️ Comandos de AutoMod</h2>
+        <h2 style="display: flex; align-items: center; gap: 12px;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          <span>Comandos de AutoMod</span>
+        </h2>
         <div class="table-container">
           <table class="table">
             <thead>
@@ -321,13 +354,18 @@
 
       <!-- Section: Escalado de Sanciones -->
       <section id="strikes-ladder" class="docs-section">
-        <h2>⚖️ Sistema de Strikes y Escalado</h2>
+        <h2 style="display: flex; align-items: center; gap: 12px;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fb7185" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+          <span>Sistema de Strikes y Escalado</span>
+        </h2>
         <p>El sistema de escalado aplica sanciones automáticas conforme un miembro acumula infracciones:</p>
         <pre class="code-box">
-1 Strike  ➔ Advertencia (WARN)
-2 Strikes ➔ Silencio temporal de 1 hora (TEMPMUTE 3600s)
-3 Strikes ➔ Expulsión del servidor (KICK)
-4 Strikes ➔ Baneo definitivo (BAN)
+1 Strike  -> Advertencia (WARN)
+2 Strikes -> Silencio temporal de 1 hora (TEMPMUTE 3600s)
+3 Strikes -> Expulsión del servidor (KICK)
+4 Strikes -> Baneo definitivo (BAN)
         </pre>
         <p>
           El programador interno en segundo plano (<code>PunishmentScheduler</code>) monitorea de forma atómica los silencios y baneos temporales, retirándolos automáticamente cuando expira su tiempo.
@@ -336,7 +374,14 @@
 
       <!-- Section: Dashboard Web -->
       <section id="web-dashboard" class="docs-section">
-        <h2>🌐 Panel Web & Discord OAuth2</h2>
+        <h2 style="display: flex; align-items: center; gap: 12px;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+          <span>Panel Web & Discord OAuth2</span>
+        </h2>
         <p>El dashboard web se ejecuta en <code>http://localhost:3000</code> y utiliza el protocolo oficial de autenticación de Discord:</p>
         <ol style="padding-left: 20px; line-height: 1.8; color: var(--text-secondary);">
           <li>Haz clic en <strong>"Iniciar Sesión con Discord"</strong>.</li>
@@ -353,7 +398,7 @@
   <footer style="border-top: 1px solid var(--border-subtle); padding: 40px 0; margin-top: 60px; text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
     <div class="container">
       <p><strong>Cosmic</strong> — Bot de Moderación, AutoMod & Web Dashboard.</p>
-      <p>Desarrollado con ❤️ por <a href="https://github.com/Zer0Dev-exe" target="_blank" style="color: var(--accent-purple);">Zer0Dev-exe</a>. Licencia MIT.</p>
+      <p>Desarrollado con <svg width="14" height="14" viewBox="0 0 24 24" fill="#fb7185" stroke="#fb7185" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; display: inline-block; margin: 0 2px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg> por <a href="https://github.com/Zer0Dev-exe" target="_blank" style="color: var(--accent-purple);">Zer0Dev-exe</a>. Licencia MIT.</p>
     </div>
   </footer>
 

@@ -207,7 +207,7 @@ apiRouter.get('/guilds/:guildId', requireAuth, requireGuildAdmin, async (req: Re
     // Extract voice channels
     voiceChannels = guild.channels.cache
       .filter(c => c.type === ChannelType.GuildVoice || c.type === ChannelType.GuildStageVoice)
-      .map(c => ({ id: c.id, name: `🔊 ${c.name}` }))
+      .map(c => ({ id: c.id, name: `[Voz] ${c.name}` }))
       .sort((a, b) => a.name.localeCompare(b.name));
 
     // Extract roles (excluding @everyone)

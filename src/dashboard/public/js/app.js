@@ -18,8 +18,12 @@ export function showToast(message, type = 'success') {
 
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
+  const iconSvg = type === 'success'
+    ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
+    : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fb7185" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`;
+
   toast.innerHTML = `
-    <span style="font-size: 1.2rem;">${type === 'success' ? '✅' : '❌'}</span>
+    <span style="display: flex; align-items: center; justify-content: center;">${iconSvg}</span>
     <span style="font-size: 0.9rem; font-weight: 500;">${message}</span>
   `;
 
@@ -272,9 +276,9 @@ function renderServerHub(data) {
   `;
 
   document.getElementById('hub-server-name').textContent = guild.name;
-  document.getElementById('hub-member-count').textContent = `👥 ${(guild.memberCount || 0).toLocaleString()} Miembros`;
-  document.getElementById('hub-cases-count').textContent = `🔨 ${stats?.totalCases || 0} Casos`;
-  document.getElementById('hub-strikes-count').textContent = `🚩 ${stats?.activeStrikesCount || 0} Strikes Activos`;
+  document.getElementById('hub-member-count').textContent = `${(guild.memberCount || 0).toLocaleString()} Miembros`;
+  document.getElementById('hub-cases-count').textContent = `${stats?.totalCases || 0} Casos`;
+  document.getElementById('hub-strikes-count').textContent = `${stats?.activeStrikesCount || 0} Strikes Activos`;
 
   const hubAvatar = document.getElementById('hub-server-avatar');
   if (guild.icon) {
@@ -560,11 +564,16 @@ async function loadCases(guildId) {
           <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${c.reason}">${c.reason}</td>
           <td style="font-size: 0.8rem; color: var(--text-secondary);">${dateStr}</td>
           <td>
-            <button class="btn btn-secondary btn-sm btn-edit-reason" data-case="${c.case_number}" data-reason="${c.reason.replace(/"/g, '&quot;')}">✏️</button>
+            <button class="btn btn-secondary btn-sm btn-edit-reason" data-case="${c.case_number}" data-reason="${c.reason.replace(/"/g, '&quot;')}" title="Editar motivo">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+              </svg>
+            </button>
           </td>
         </tr>
       `;
     }).join('');
+
 
     tbody.querySelectorAll('.btn-edit-reason').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -603,7 +612,12 @@ async function loadStrikes(guildId) {
       return `
         <tr>
           <td class="mono">${s.userId}</td>
-          <td><span class="tag-pill" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; font-weight: bold;">🚩 ${s.strikes} Strikes</span></td>
+          <td>
+            <span class="tag-pill" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; font-weight: bold; display: inline-flex; align-items: center; gap: 6px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+              <span>${s.strikes} Strikes</span>
+            </span>
+          </td>
           <td style="font-size: 0.8rem; color: var(--text-secondary);">${dateStr}</td>
           <td>
             <button class="btn btn-secondary btn-sm btn-pardon-strike" data-user="${s.userId}">Perdonar 1 Strike</button>
@@ -611,6 +625,7 @@ async function loadStrikes(guildId) {
         </tr>
       `;
     }).join('');
+
 
     tbody.querySelectorAll('.btn-pardon-strike').forEach(btn => {
       btn.addEventListener('click', async () => {
