@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx src/index.ts",
-    "build": "tsc",
+    "build": "tsc && node -e \"const fs = require('fs'); fs.cpSync('src/dashboard/public', 'dist/dashboard/public', { recursive: true, force: true });\"",
     "start": "node dist/index.js",
     "deploy-commands": "tsx src/deploy-commands.ts",
     "test": "vitest run"
